@@ -30,3 +30,34 @@ void loop() {
     display_handler.println(rightValue);
     display_handler.display();
 };
+
+
+/* Tape Cases
+x = value to give to pid
+
+Both on tape: x=0
+left off right on: x=-1
+left on right off: x = 1 
+both off (left last on): x = 5
+both off (right last on): x = -5
+*/
+
+
+/*
+loop
+  pot = analog(input); #Feedback Sensor
+  set = knob(); Set point
+
+  error = set - pot; current error
+  p = kp * error; proportional
+  d = kd * (error - lastError); derivative
+  i = ki * error + i; integral
+  i = (i > maxi) ? maxi; check to make integral not dominate
+  i = (i < -maxi) ? -maxi;
+
+  g = p + i + d;
+  motor(3,g); set motor pwm based on pid
+  lastError = error
+
+
+*/
