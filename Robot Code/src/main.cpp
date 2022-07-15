@@ -18,7 +18,11 @@ Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET)
 
 // void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution){}
 
-int leftCount, rightCount;
+int leftCount = 0;
+int rightCount = 0;
+
+int abcdefgh = 0;
+#define LED_BUILTIN PC13
 
 void handle_left_motor(){
   leftCount++;
@@ -30,12 +34,15 @@ void handle_right_motor(){
 
 void setup() {
   display_handler.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  display_handler.setTextSize(4);
+  display_handler.setTextSize(1);
   display_handler.setTextColor(SSD1306_WHITE);
+  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(MOTOR_LEFT_F, OUTPUT);
   pinMode(MOTOR_LEFT_B, OUTPUT);
-  pinMode(MOTOR_RIGHT_F, OUTPUT);
-  pinMode(MOTOR_RIGHT_B, OUTPUT);
+  pinMode(PA2, OUTPUT); //This and the next 3 lines are because this somehow breaks I2c
+  pinMode(PA3, OUTPUT);
+  // pinMode(MOTOR_RIGHT_F, OUTPUT);
+  // pinMode(MOTOR_RIGHT_B, OUTPUT);
   pinMode(LEFT_ENCODER, INPUT_PULLUP);
   pinMode(RIGHT_ENCODER, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(LEFT_ENCODER), handle_left_motor, RISING);
@@ -43,14 +50,21 @@ void setup() {
   }
 
 void loop() {
+  digitalWrite(LED_BUILTIN, HIGH);
   display_handler.clearDisplay();
   display_handler.setCursor(0,0);
+  display_handler.println(abcdefgh);
   display_handler.print("Left: ");
   display_handler.println(leftCount);
   display_handler.print("Right: ");
   display_handler.println(rightCount);
   display_handler.display();
+  abcdefgh++;
 
-  pwm_start(MOTOR_LEFT_F, MOTOR_CLOCK_FREQ, 512, RESOLUTION_10B_COMPARE_FORMAT);
+  pwm_start(MOTOR_LEFT_F, MOTOR_CLOCK_FREQ, 1024, RESOLUTION_10B_COMPARE_FORMAT);
   pwm_start(MOTOR_RIGHT_F, MOTOR_CLOCK_FREQ, 512, RESOLUTION_10B_COMPARE_FORMAT);
+
+  delay(200);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(200);
 };
