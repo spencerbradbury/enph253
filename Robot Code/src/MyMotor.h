@@ -5,6 +5,7 @@ class MyMotor {
         PinName forwardPin;
         PinName backwardPin;
         int speed;
+        int defaultSpeed;
         
 
     public:
@@ -12,11 +13,16 @@ class MyMotor {
             this->forwardPin = forwardPin;
             this->backwardPin = backwardPin;
             this->speed = defaultSpeed;
+            this->defaultSpeed = defaultSpeed;
+        }
+
+        void modulateSpeed(int value){
+            this->speed = defaultSpeed + value;
+            start();
         }
 
         void setSpeed(int speed){
             this->speed = speed;
-            start();
         }
 
         void stop(){
@@ -26,12 +32,12 @@ class MyMotor {
 
         void start(){
             stop();
-            if (speed > 0)
+            if (this->speed > 0)
             {
-                pwm_start(forwardPin, MOTOR_CLOCK_FREQ, map(speed, 0, 100, 0, RESOLUTION_10B_COMPARE_FORMAT), RESOLUTION_10B_COMPARE_FORMAT);
+                pwm_start(forwardPin, MOTOR_CLOCK_FREQ, map(this->speed, 0, 100, 0, 1023), RESOLUTION_10B_COMPARE_FORMAT);
             }
-            else if (speed < 0){
-                pwm_start(backwardPin, MOTOR_CLOCK_FREQ, map(-speed, 0, 100, 0, RESOLUTION_10B_COMPARE_FORMAT), RESOLUTION_10B_COMPARE_FORMAT);
+            else if (this->speed < 0){
+                pwm_start(backwardPin, MOTOR_CLOCK_FREQ, map(-this->speed, 0, 100, 0, 1023), RESOLUTION_10B_COMPARE_FORMAT);
             }          
         }
 };
