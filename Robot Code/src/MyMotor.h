@@ -1,4 +1,4 @@
-#ifndef MYMOTOR_H
+#if !defined(MYMOTOR_H)
 #define MYMOTOR_H
 
 #include <Arduino.h>
@@ -21,4 +21,4 @@ class MyMotor {
 
         void start();
 };
-#endif
+#endif //MYMOTOR_H

@@ -1,5 +1,6 @@
-#ifndef MYENCODER_H
+#if !defined(MYENCODER_H)
 #define MYENCODER_H
+
 #define countPerRotation 1441
 
 class MyEncoder{
@@ -18,4 +19,4 @@ class MyEncoder{
         }
         
 };
-#endif
+#endif //MYENCODER_H
