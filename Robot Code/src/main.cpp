@@ -1,3 +1,5 @@
+#define DEBUG 1
+
 #include <Adafruit_SSD1306.h>
 #include <MyMotor.h>
 #include <MyEncoder.h>
@@ -20,8 +22,8 @@
 
 // #define PID_MAX_INT 10
 
-MyMotor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, 40);
-MyMotor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, 40);
+MyMotor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, 50);
+MyMotor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, 50);
 MyEncoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
 
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -30,7 +32,7 @@ int leftCount = 0;
 int rightCount = 0;
 int pidErr = 0;
 int pidLastErr = 0;
-int kp = 17; // 40(15 -- 17) 50(20)
+int kp = 20; // 40(15 -- 17) 50(20)
 int kd = 8; //40(7 -- 8) 50(8)
 // int ki = 0;
 int abcdefgh = 0;
@@ -42,6 +44,7 @@ void handle_left_motor(){
 void handle_right_motor(){
   rightCount++;
 }
+
 
 void tapeFollow(int pidInput){
   // void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution){}= defaultPWM;
@@ -60,19 +63,18 @@ void tapeFollow(int pidInput){
   }
 }
 
-
-/*
-Both on tape: x=0
-left off right on: x=-1
-left on right off: x = 1 
-both off (left last on): x = 5
-both off (right last on): x = -5
-*/
-
 int motorPID(int startCase){  
-  bool leftOnTape = (analogRead(LINE_FOLLOW_LEFT) > REFLECTANCE_THRESHOLD);
-  bool rightOnTape = (analogRead(LINE_FOLLOW_RIGHT) > REFLECTANCE_THRESHOLD);
+  int leftValue = analogRead(LINE_FOLLOW_LEFT);
+  int rightValue = analogRead(LINE_FOLLOW_RIGHT);
 
+  if (leftValue > 600 || rightValue > 600){
+    return (kp * pidLastErr);
+  }
+
+  bool leftOnTape = (leftValue > REFLECTANCE_THRESHOLD);
+  bool rightOnTape = (rightValue > REFLECTANCE_THRESHOLD);
+
+  #if DEBUG
   display_handler.print("left: ");
   display_handler.print(analogRead(LINE_FOLLOW_LEFT));
   display_handler.print(", ");
@@ -81,6 +83,7 @@ int motorPID(int startCase){
   display_handler.print(analogRead(LINE_FOLLOW_RIGHT));
   display_handler.print(", ");
   display_handler.println(rightOnTape);
+  #endif
 
   if (leftOnTape && !rightOnTape){
     pidErr = 1;
