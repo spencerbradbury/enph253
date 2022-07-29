@@ -3,22 +3,23 @@
 
 #include <Arduino.h>
 
-class MyMotor {
-    private:
-        PinName forwardPin;
-        PinName backwardPin;
-        int speed;
-        int defaultSpeed;
+class MyMotor
+{
+private:
+    PinName forwardPin;
+    PinName backwardPin;
+    int speed;
+    int defaultSpeed;
 
-    public:
-        MyMotor(PinName forwardPin, PinName backwardPin, int defaultSpeed);
+public:
+    MyMotor(PinName forwardPin, PinName backwardPin, int defaultSpeed);
 
-        void modulateSpeed(int value);
+    void modulateSpeed(int value);
 
-        void setSpeed(int speed);
+    void setSpeed(int speed);
 
-        void stop();
+    void stop();
 
-        void start();
+    void start();
 };
-#endif //MYMOTOR_H
+#endif // MYMOTOR_H

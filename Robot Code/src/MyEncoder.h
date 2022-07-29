@@ -1,22 +1,30 @@
 #if !defined(MYENCODER_H)
 #define MYENCODER_H
 
-#define countPerRotation 1441
+#include <Arduino.h>
 
-class MyEncoder{
-    private:
+class MyEncoder
+{
+private:
+    uint8_t pin1;
+    uint8_t pin2;
     int direction;
     int count;
-    
-    static void onInterrupt(){
+    int speed;
 
-    }
+public:
+    MyEncoder(uint8_t pin1, uint8_t pin2);
 
-    public:
-        MyEncoder(int Pin1, int Pin2){
-            // void onInterrupt();
-            attachInterrupt(digitalPinToInterrupt(Pin1), onInterrupt, RISING);
-        }
-        
+    MyEncoder(uint8_t pin1);
+
+    int getCount();
+
+    int getDistance();
+
+    void resetCount();
+
+    void setCount();
+
+    void setDirection();
 };
-#endif //MYENCODER_H
+#endif // MYENCODER_H
