@@ -1,10 +1,12 @@
 #define DEBUG 0
+#define TAPE 1
+#define PICKUP 0
 
 #include <Adafruit_SSD1306.h>
-#include "MyMotor.h"
-#include "MyEncoder.h"
-#include "MyIR.h"
-#include "MyClaw.h"
+#include "Motor.h"
+#include "Encoder.h"
+#include "IR.h"
+#include "Claw.h"
 
 // SCREEN CONNECTIONS SCK -> B6, SDA -> B7
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -23,15 +25,21 @@
 #define ULTRASONIC_TRIGGER PB12
 #define ULTARSONIC_LEFT PB13
 #define ULTRASONIC_RIGHT PB14
+#define LEFT_ARM PB1
+#define LEFT_CLAW PB0
+#define RIGHT_ARM PA7
+#define RIGHT_CLAW PA8
 
 #define REFLECTANCE_THRESHOLD 200
 #define MOTOR_SPEED 65
 #define PID_MAX_INT MOTOR_SPEED / 3
 
-MyMotor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
-MyMotor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
-// MyEncoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
-MyIR IRSensors(IR_READ, IR_SELECT, IR_RESET);
+Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 70, 110, 10);
+Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 0, 90, 70, 172);
+Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
+Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
+// Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
+IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
 
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -165,6 +173,13 @@ void loop()
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
   PIDControl(tapePID());
+  PIDControl(IRPID());
+  int distance = rightClaw.getDistance();
+  if (distance > 5 && distance < 20)
+  {
+    rightClaw.pickUp();
+  }
+
   display_handler.display();
   abcdefgh++;
 };
