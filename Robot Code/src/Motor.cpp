@@ -1,6 +1,6 @@
 #include "Motor.h"
 #include <Arduino.h>
-#define MOTOR_CLOCK_FREQ 100
+#define MOTOR_CLOCK_FREQ 100 // might have to change to 50
 
 Motor::Motor(PinName forwardPin, PinName backwardPin, int defaultSpeed)
 {

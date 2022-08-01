@@ -1,11 +1,11 @@
 #include "Claw.h"
 #include <Arduino.h>
-#include <Servo.h>
+#include "BetterServo.h"
 
 #define ULTRASONIC_TIMEOUT 900 // microseconds
 #define SERVO_STEP_DELAY 15
 
-void Claw::moveServo(Servo servo, int start, int end)
+void Claw::moveServo(BetterServo servo, int start, int end)
 {
   if (start < end)
   {
@@ -25,13 +25,10 @@ void Claw::moveServo(Servo servo, int start, int end)
   }
 }
 
-Claw::Claw(uint8_t armPin, uint8_t clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClose, int armUp, int armDown)
+Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClose, int armUp, int armDown)
 {
-  Servo armServo;
-  Servo clawServo;
-
-  armServo.attach(armPin);
-  clawServo.attach(clawPin);
+  BetterServo armServo(armPin);
+  BetterServo clawServo(clawPin);
 
   this->armServo = armServo;
   this->clawServo = clawServo;

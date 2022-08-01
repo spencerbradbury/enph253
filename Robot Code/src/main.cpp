@@ -1,6 +1,4 @@
 #define DEBUG 0
-#define TAPE 1
-#define PICKUP 0
 
 #include <Adafruit_SSD1306.h>
 #include "Motor.h"
@@ -17,8 +15,8 @@
 #define MOTOR_LEFT_B PB_7
 #define MOTOR_RIGHT_F PB_8
 #define MOTOR_RIGHT_B PB_9
-#define LINE_FOLLOW_RIGHT PA7
-#define LINE_FOLLOW_LEFT PB0
+#define LINE_FOLLOW_RIGHT PA3
+#define LINE_FOLLOW_LEFT PA4
 #define IR_SELECT PA11
 #define IR_RESET PA12
 #define IR_READ PA5
@@ -29,13 +27,15 @@
 #define LEFT_CLAW PB0
 #define RIGHT_ARM PA7
 #define RIGHT_CLAW PA8
+#define I2C_SDA PB11
+#define I2C_SCL PB10
 
 #define REFLECTANCE_THRESHOLD 200
 #define MOTOR_SPEED 65
 #define PID_MAX_INT MOTOR_SPEED / 3
 
-Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 70, 110, 10);
-Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 0, 90, 70, 172);
+// Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 70, 110, 10);
+// Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 0, 90, 70, 172);
 Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 // Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
@@ -56,11 +56,12 @@ int IRPidErr = 0;
 int IRPidLastErr = 0;
 int abcdefgh = 0;
 
+
 void PIDControl(int pidInput)
 {
-  // void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution){}= defaultPWM;
-  // Defualt PWM is standard pwm value that will be modulated based on the steering requirement
-  // Steering requirement is PID value, + left slows, - right slows.
+//   // void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution){}= defaultPWM;
+//   // Defualt PWM is standard pwm value that will be modulated based on the steering requirement
+//   // Steering requirement is PID value, + left slows, - right slows.
 
   if (pidInput > 0)
   {
@@ -158,13 +159,15 @@ int tapePID()
 
 void setup()
 {
-  display_handler.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  Wire.setSDA(PB11);
+  Wire.setSCL(PB10); 
+  display_handler.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
   display_handler.setTextSize(1);
   display_handler.setTextColor(SSD1306_WHITE);
   pinMode(LINE_FOLLOW_LEFT, INPUT_ANALOG);
   pinMode(LINE_FOLLOW_RIGHT, INPUT_ANALOG);
-  leftMotor.start();
-  rightMotor.start();
+  // leftMotor.start();
+  // rightMotor.start();
 }
 
 void loop()
@@ -172,13 +175,14 @@ void loop()
   display_handler.clearDisplay();
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
-  PIDControl(tapePID());
-  PIDControl(IRPID());
-  int distance = rightClaw.getDistance();
-  if (distance > 5 && distance < 20)
-  {
-    rightClaw.pickUp();
-  }
+  // PIDControl(tapePID());
+  // PIDControl(IRPID());
+  // int distance = rightClaw.getDistance();
+  // display_handler.println(distance);
+  // if (distance > 5 && distance < 20)
+  // {
+  //   rightClaw.pickUp();
+  // }
 
   display_handler.display();
   abcdefgh++;
