@@ -25,11 +25,9 @@ void Claw::moveServo(BetterServo servo, int start, int end)
   }
 }
 
-Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClose, int armUp, int armDown)
-{
+Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClose, int armUp, int armDown){
   BetterServo armServo(armPin);
   BetterServo clawServo(clawPin);
-
   this->armServo = armServo;
   this->clawServo = clawServo;
   this->ultraTrig = ultrasonicTrigger;

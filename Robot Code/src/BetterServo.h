@@ -14,10 +14,12 @@ class BetterServo
 private:
     PinName servoPin;
 public:
+    BetterServo();
+
     BetterServo(PinName servoPin);
 
     void write(int angle);
-}
+};
 
 
 #endif // BETTERSERVO_H

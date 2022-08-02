@@ -1,6 +1,8 @@
 #include "BetterServo.h"
 #include <Arduino.h>
 
+BetterServo::BetterServo(){}
+
 BetterServo::BetterServo(PinName servoPin){
     this->servoPin = servoPin;
 }

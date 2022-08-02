@@ -1,5 +1,6 @@
 #define DEBUG 0
 
+#include <Arduino.h>
 #include <Adafruit_SSD1306.h>
 #include "Motor.h"
 #include "Encoder.h"
@@ -23,10 +24,10 @@
 #define ULTRASONIC_TRIGGER PB12
 #define ULTARSONIC_LEFT PB13
 #define ULTRASONIC_RIGHT PB14
-#define LEFT_ARM PB1
-#define LEFT_CLAW PB0
-#define RIGHT_ARM PA7
-#define RIGHT_CLAW PA8
+#define LEFT_ARM PB_1
+#define LEFT_CLAW PB_0
+#define RIGHT_ARM PA_7
+#define RIGHT_CLAW PA_8
 #define I2C_SDA PB11
 #define I2C_SCL PB10
 
@@ -34,7 +35,7 @@
 #define MOTOR_SPEED 65
 #define PID_MAX_INT MOTOR_SPEED / 3
 
-// Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 70, 110, 10);
+Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 70, 110, 10);
 // Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 0, 90, 70, 172);
 Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
@@ -166,8 +167,8 @@ void setup()
   display_handler.setTextColor(SSD1306_WHITE);
   pinMode(LINE_FOLLOW_LEFT, INPUT_ANALOG);
   pinMode(LINE_FOLLOW_RIGHT, INPUT_ANALOG);
-  // leftMotor.start();
-  // rightMotor.start();
+  leftMotor.start();
+  rightMotor.start();
 }
 
 void loop()
