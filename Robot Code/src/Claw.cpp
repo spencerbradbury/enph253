@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "BetterServo.h"
 
-#define ULTRASONIC_TIMEOUT 50000UL // microseconds
+#define ULTRASONIC_TIMEOUT 4500UL // microseconds
 #define SERVO_STEP_DELAY 15
 
 void Claw::moveServo(BetterServo servo, int start, int end)
@@ -63,7 +63,7 @@ int Claw::getDistance()
   digitalWrite(ultraTrig, HIGH);
   delayMicroseconds(10);
   digitalWrite(ultraTrig, LOW);
-  duration = pulseIn(ultraEcho, HIGH);
-  // duration = pulseIn(ultraEcho, HIGH, ULTRASONIC_TIMEOUT);
+  // duration = pulseIn(ultraEcho, HIGH);
+  duration = pulseIn(ultraEcho, HIGH, ULTRASONIC_TIMEOUT);
   return ((duration / 2) / 29.1);
 }
