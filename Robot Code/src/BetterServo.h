@@ -13,6 +13,7 @@ class BetterServo
 {
 private:
     PinName servoPin;
+
 public:
     BetterServo();
 
@@ -21,7 +22,4 @@ public:
     void write(int angle);
 };
 
-
 #endif // BETTERSERVO_H
-
-
