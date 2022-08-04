@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "BetterServo.h"
 
-#define ULTRASONIC_TIMEOUT 1000 // microseconds
+#define ULTRASONIC_TIMEOUT 2000UL // microseconds
 #define SERVO_STEP_DELAY 15
 
 void Claw::moveServo(BetterServo servo, int start, int end)
