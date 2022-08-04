@@ -41,109 +41,66 @@ Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 // Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
-PID IRPID(5, 1, 1, PID_MAX_INT);
+PID irPID(5, 1, 1, PID_MAX_INT);
 PID tapePID(20, 8, 0, PID_MAX_INT);
 
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 int abcdefgh = 0;
 
-void PIDControl(int pidInput)
-{
-  //   // void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution){}= defaultPWM;
-  //   // Defualt PWM is standard pwm value that will be modulated based on the steering requirement
-  //   // Steering requirement is PID value, + left slows, - right slows.
-
-  if (pidInput > 0)
-  {
-    leftMotor.modulateSpeed(-pidInput);
-  }
-  else if (pidInput < 0)
-  {
-    rightMotor.modulateSpeed(pidInput);
-  }
-  else
-  {
-    leftMotor.modulateSpeed(0);
-    rightMotor.modulateSpeed(0);
-  }
-}
-
-int IRPID()
-{
+int irError(){
   std::pair<int, int> data = IRSensors.read();
 
-  IRPidErr = data.first - data.second;
-
+#if DEBUG
   display_handler.printf("left: %d \n", data.first);
   display_handler.printf("right: %d \n", data.second);
-  display_handler.printf("Error: %d \n", IRPidErr);
+  display_handler.printf("Error: %d \n", data.first - data.second);
+#endif
 
-  int p = IRKp * IRPidErr;
-  int d = IRKd * (IRPidErr - IRPidLastErr);
-  int i = IRKi * IRPidErr + i; // integral
-  i = (i > PID_MAX_INT) ? PID_MAX_INT : i;
-  i = (i < -PID_MAX_INT) ? -PID_MAX_INT : i;
-
-  IRPidLastErr = IRPidErr;
-
-  return (p + i + d);
+return (data.first - data.second);
 }
 
-int tapePID()
+int tapeError()
 {
   int leftValue = analogRead(LINE_FOLLOW_LEFT);
   int rightValue = analogRead(LINE_FOLLOW_RIGHT);
 
-  if (leftValue > 600 || rightValue > 600)
-  {
-    return (tapeKp * tapePidLastErr);
-  }
-
   bool leftOnTape = (leftValue > REFLECTANCE_THRESHOLD);
   bool rightOnTape = (rightValue > REFLECTANCE_THRESHOLD);
+
+  if (leftValue > 600 || rightValue > 600)
+  {
+    return (tapePID.getlastErr());
+  }
+
+  if (leftOnTape && !rightOnTape)
+  {
+    return(1);
+  }
+  else if (!leftOnTape && rightOnTape)
+  {
+    return(-1);
+  }
+  else if (!leftOnTape && !rightOnTape)
+  {
+    if (tapePID.getlastErr() > 0)
+    {
+      return(3);
+    }
+    else if (tapePID.getlastErr() < 0)
+    {
+      return(-3);
+    }
+  }
+  else
+  {
+    return(0);
+  }
 
 #if DEBUG
   display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
   display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
 #endif
-
-  if (leftOnTape && !rightOnTape)
-  {
-    tapePidErr = 1;
-  }
-  else if (!leftOnTape && rightOnTape)
-  {
-    tapePidErr = -1;
-  }
-  else if (!leftOnTape && !rightOnTape)
-  {
-    if (tapePidLastErr > 0)
-    {
-      tapePidErr = 3;
-    }
-    else if (tapePidLastErr < 0)
-    {
-      tapePidErr = -3;
-    }
-  }
-  else
-  {
-    tapePidErr = 0;
-  }
-
-  display_handler.print("tapePidErr: ");
-  display_handler.println(tapePidErr);
-
-  int p = tapeKp * tapePidErr;                    // proportional
-  int d = tapeKd * (tapePidErr - tapePidLastErr); // derivative
-  // Hopefully don't need integral
-  //  int i = ki * pidErr + i; //integral
-  //  i = (i > PID_MAX_INT) ? PID_MAX_INT : i;
-  //  i = (i < -PID_MAX_INT) ? -PID_MAX_INT : i;
-
-  tapePidLastErr = tapePidErr;
-  return (p /*+ i*/ + d);
 }
 
 void setup()
@@ -170,8 +127,9 @@ void loop()
   display_handler.clearDisplay();
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
-  // PIDControl(tapePID());
-  // PIDControl(IRPID());
+  tapePID.pid(tapeError());
+  irPID.pid(irError());
+
   int distance = rightClaw.getDistance();
   display_handler.println(distance);
   // if (distance > 10 && distance < 30)
