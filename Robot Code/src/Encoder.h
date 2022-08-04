@@ -7,13 +7,14 @@ class Encoder
 {
 private:
     uint8_t pin1;
-    uint8_t pin2;
-    int direction;
+    PinName pin2;
     int count;
     int speed;
 
+    void handleInterrupt();
+
 public:
-    Encoder(uint8_t pin1, uint8_t pin2);
+    Encoder(uint8_t pin1, PinName pin2);
 
     Encoder(uint8_t pin1);
 
@@ -23,7 +24,7 @@ public:
 
     void resetCount();
 
-    void setCount();
+    void setCount(int);
 
     void setDirection();
 };
