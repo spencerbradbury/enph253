@@ -1,4 +1,4 @@
-#define DEBUG 0
+#define DEBUG 1
 
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
@@ -7,15 +7,14 @@
 #include "IR.h"
 #include "Claw.h"
 
-// SCREEN CONNECTIONS SCK -> B6, SDA -> B7
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1    // This display does not have a reset pin accessible
 
-#define MOTOR_LEFT_F PB_6
-#define MOTOR_LEFT_B PB_7
-#define MOTOR_RIGHT_F PB_8
-#define MOTOR_RIGHT_B PB_9
+#define MOTOR_LEFT_B PB_6
+#define MOTOR_LEFT_F PB_7
+#define MOTOR_RIGHT_B PB_8
+#define MOTOR_RIGHT_F PB_9
 #define LINE_FOLLOW_RIGHT PA3
 #define LINE_FOLLOW_LEFT PA4
 #define IR_SELECT PA11
@@ -50,19 +49,18 @@ int tapeKp = 20; // 40(15 -- 17) 50(20)
 int tapeKd = 8;  // 40(7 -- 8) 50(8)
 // int ki = 0;
 
-int IRKp = 0;
-int IRKd = 0;
-int IRKi = 0;
+int IRKp = 5;
+int IRKd = 1;
+int IRKi = 1;
 int IRPidErr = 0;
 int IRPidLastErr = 0;
 int abcdefgh = 0;
 
-
 void PIDControl(int pidInput)
 {
-//   // void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution){}= defaultPWM;
-//   // Defualt PWM is standard pwm value that will be modulated based on the steering requirement
-//   // Steering requirement is PID value, + left slows, - right slows.
+  //   // void pwm_start(PinName pin, uint32_t clock_freq, uint32_t value, TimerCompareFormat_t resolution){}= defaultPWM;
+  //   // Defualt PWM is standard pwm value that will be modulated based on the steering requirement
+  //   // Steering requirement is PID value, + left slows, - right slows.
 
   if (pidInput > 0)
   {
@@ -84,6 +82,10 @@ int IRPID()
   std::pair<int, int> data = IRSensors.read();
 
   IRPidErr = data.first - data.second;
+
+  display_handler.printf("left: %d \n", data.first);
+  display_handler.printf("right: %d \n", data.second);
+  display_handler.printf("Error: %d \n", IRPidErr);
 
   int p = IRKp * IRPidErr;
   int d = IRKd * (IRPidErr - IRPidLastErr);
@@ -110,14 +112,8 @@ int tapePID()
   bool rightOnTape = (rightValue > REFLECTANCE_THRESHOLD);
 
 #if DEBUG
-  display_handler.print("left: ");
-  display_handler.print(analogRead(LINE_FOLLOW_LEFT));
-  display_handler.print(", ");
-  display_handler.println(leftOnTape);
-  display_handler.print("right: ");
-  display_handler.print(analogRead(LINE_FOLLOW_RIGHT));
-  display_handler.print(", ");
-  display_handler.println(rightOnTape);
+  display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
+  display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
 #endif
 
   if (leftOnTape && !rightOnTape)
@@ -161,12 +157,13 @@ int tapePID()
 void setup()
 {
   Wire.setSDA(PB11);
-  Wire.setSCL(PB10); 
-  display_handler.begin(SSD1306_SWITCHCAPVCC, 0x3C); 
+  Wire.setSCL(PB10);
+  display_handler.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display_handler.setTextSize(1);
   display_handler.setTextColor(SSD1306_WHITE);
   pinMode(LINE_FOLLOW_LEFT, INPUT_ANALOG);
   pinMode(LINE_FOLLOW_RIGHT, INPUT_ANALOG);
+  pinMode(IR_SELECT, OUTPUT);
   leftMotor.start();
   rightMotor.start();
 }
@@ -176,11 +173,11 @@ void loop()
   display_handler.clearDisplay();
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
-  // PIDControl(tapePID());
+  PIDControl(tapePID());
   // PIDControl(IRPID());
   // int distance = rightClaw.getDistance();
   // display_handler.println(distance);
-  // if (distance > 5 && distance < 20)
+  // if (distance > 10 && distance < 30)
   // {
   //   rightClaw.pickUp();
   // }

@@ -23,11 +23,13 @@ std::pair<int, int> IR::read()
 
     digitalWrite(eyeSelectPin, leftEye);
     digitalWrite(clearPin, HIGH);
+    // delayMicroseconds(1000);
     digitalWrite(clearPin, LOW);
     data.first = analogRead(readPin);
 
     digitalWrite(eyeSelectPin, rightEye);
     digitalWrite(clearPin, HIGH);
+    // delayMicroseconds(1000);
     digitalWrite(clearPin, LOW);
     data.second = analogRead(readPin);
 
