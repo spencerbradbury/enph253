@@ -6,6 +6,7 @@
 #include "Encoder.h"
 #include "IR.h"
 #include "Claw.h"
+#include "PID.h"
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -40,20 +41,11 @@ Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 // Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
+PID IRPID(5, 1, 1, PID_MAX_INT);
+PID tapePID(20, 8, 0, PID_MAX_INT);
 
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-int tapePidErr = 0;
-int tapePidLastErr = 0;
-int tapeKp = 20; // 40(15 -- 17) 50(20)
-int tapeKd = 8;  // 40(7 -- 8) 50(8)
-// int ki = 0;
-
-int IRKp = 5;
-int IRKd = 1;
-int IRKi = 1;
-int IRPidErr = 0;
-int IRPidLastErr = 0;
 int abcdefgh = 0;
 
 void PIDControl(int pidInput)
@@ -95,7 +87,7 @@ int IRPID()
 
   IRPidLastErr = IRPidErr;
 
-  return (p + d);
+  return (p + i + d);
 }
 
 int tapePID()
