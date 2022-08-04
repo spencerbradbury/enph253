@@ -10,6 +10,7 @@ private:
     PinName pin2;
     int count;
     int speed;
+    uint32_t lastTime;
 
     void handleInterrupt();
 
