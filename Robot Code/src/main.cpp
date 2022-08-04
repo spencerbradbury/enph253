@@ -26,7 +26,7 @@
 #define LEFT_ARM PB_1
 #define LEFT_CLAW PB_0
 #define RIGHT_ARM PA_7
-#define RIGHT_CLAW PA_8
+#define RIGHT_CLAW PA_6
 #define I2C_SDA PB11
 #define I2C_SCL PB10
 
@@ -34,8 +34,8 @@
 #define MOTOR_SPEED 65
 #define PID_MAX_INT MOTOR_SPEED / 3
 
-Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 70, 110, 10);
-// Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 0, 90, 70, 172);
+Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 0, 0, 0);
+Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 0, 0, 0, 0);
 Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 // Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
@@ -164,8 +164,13 @@ void setup()
   pinMode(LINE_FOLLOW_LEFT, INPUT_ANALOG);
   pinMode(LINE_FOLLOW_RIGHT, INPUT_ANALOG);
   pinMode(IR_SELECT, OUTPUT);
-  leftMotor.start();
-  rightMotor.start();
+  pinMode(ULTRASONIC_TRIGGER, OUTPUT);
+  pinMode(ULTRASONIC_RIGHT, INPUT);
+  pinMode(ULTARSONIC_LEFT, INPUT);
+  // leftMotor.start();
+  // rightMotor.start();
+  leftClaw.start();
+  rightClaw.start();
 }
 
 void loop()
@@ -173,10 +178,10 @@ void loop()
   display_handler.clearDisplay();
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
-  PIDControl(tapePID());
+  // PIDControl(tapePID());
   // PIDControl(IRPID());
-  // int distance = rightClaw.getDistance();
-  // display_handler.println(distance);
+  int distance = rightClaw.getDistance();
+  display_handler.println(distance);
   // if (distance > 10 && distance < 30)
   // {
   //   rightClaw.pickUp();
