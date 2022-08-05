@@ -12,7 +12,7 @@ void Encoder::handleInterrupt()
     {
         count++;
     }
-    else
+    else    
     {
         count--;
     }
@@ -29,6 +29,7 @@ Encoder::Encoder(uint8_t pin1, PinName pin2)
     this->pin2 = pin2;
     this->count = 0;
     this->lastTime = millis();
+    attachInterrupt(digitalPinToInterrupt(pin1), std::bind(&Encoder::handleInterrupt,this), RISING);
 }
 
 int Encoder::getCount()

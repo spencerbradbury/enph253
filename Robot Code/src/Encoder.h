@@ -17,8 +17,6 @@ private:
 public:
     Encoder(uint8_t pin1, PinName pin2);
 
-    Encoder(uint8_t pin1);
-
     int getCount();
 
     int getDistance();
@@ -26,7 +24,5 @@ public:
     void resetCount();
 
     void setCount(int);
-
-    void setDirection();
 };
 #endif // ENCODER_H
