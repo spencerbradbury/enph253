@@ -24,7 +24,7 @@ public:
     int pid(int error);
 
     int getKP();
-    
+
     int getlastErr();
 };
 
