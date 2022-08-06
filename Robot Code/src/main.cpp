@@ -41,15 +41,18 @@ Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 // Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
-PID irPID(5, 1, 1, PID_MAX_INT);
+PID irPID(20, 8, 1, PID_MAX_INT);
 PID tapePID(20, 8, 0, PID_MAX_INT);
 
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 int abcdefgh = 0;
 
-int irError(){
+int irError()
+{
   std::pair<int, int> data = IRSensors.read();
+
+  int rawError = data.first - data.second;
 
 #if DEBUG
   display_handler.printf("left: %d \n", data.first);
@@ -57,7 +60,37 @@ int irError(){
   display_handler.printf("Error: %d \n", data.first - data.second);
 #endif
 
-return (data.first - data.second);
+  if (rawError > 200)
+  {
+    return (5);
+  }
+
+  if (rawError > 100)
+  {
+    return (3);
+  }
+
+  if (rawError > 20)
+  {
+    return (1);
+  }
+
+  if (rawError < -200)
+  {
+    return (-5);
+  }
+
+  if (rawError < -100)
+  {
+    return (-3);
+  }
+
+  if (rawError < -20)
+  {
+    return (-1);
+  }
+
+  return (0);
 }
 
 int tapeError()
@@ -75,26 +108,26 @@ int tapeError()
 
   if (leftOnTape && !rightOnTape)
   {
-    return(1);
+    return (1);
   }
   else if (!leftOnTape && rightOnTape)
   {
-    return(-1);
+    return (-1);
   }
   else if (!leftOnTape && !rightOnTape)
   {
     if (tapePID.getlastErr() > 0)
     {
-      return(3);
+      return (3);
     }
     else if (tapePID.getlastErr() < 0)
     {
-      return(-3);
+      return (-3);
     }
   }
   else
   {
-    return(0);
+    return (0);
   }
 
 #if DEBUG
@@ -128,10 +161,10 @@ void loop()
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
   tapePID.pid(tapeError());
-  irPID.pid(irError());
+  // irPID.pid(irError());
 
-  int distance = rightClaw.getDistance();
-  display_handler.println(distance);
+  // int distance = rightClaw.getDistance();
+  // display_handler.println(distance);
   // if (distance > 10 && distance < 30)
   // {
   //   rightClaw.pickUp();
