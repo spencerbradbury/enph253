@@ -1,6 +1,6 @@
 #include "Encoder.h"
 #include <Arduino.h>
-#include <digital_io.h>
+// #include <digital_io.h>
 
 #define COUNT_PER_ROTATION 144         // 1441 before we divided by 10
 #define WHEEL_DIAMTER 111              // mm or 11.1cm
@@ -8,7 +8,7 @@
 
 void Encoder::handleInterrupt()
 {
-    if (digitalReadFast(pin2))
+    if (digitalReadFast(this->pin2))
     {
         count++;
     }
@@ -17,10 +17,10 @@ void Encoder::handleInterrupt()
         count--;
     }
 
-    uint32_t time = millis();
+    // uint32_t time = millis();
 
-    this->speed = DISTANCE_PER_COUNT / (time - this->lastTime);
-    this->lastTime = time;
+    // this->speed = DISTANCE_PER_COUNT / (time - this->lastTime);
+    // this->lastTime = time;
 }
 
 Encoder::Encoder(uint8_t pin1, PinName pin2)

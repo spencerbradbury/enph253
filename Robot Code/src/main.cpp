@@ -12,10 +12,10 @@
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1    // This display does not have a reset pin accessible
 
-#define MOTOR_LEFT_B PB_6
-#define MOTOR_LEFT_F PB_7
-#define MOTOR_RIGHT_B PB_8
-#define MOTOR_RIGHT_F PB_9
+#define MOTOR_RIGHT_F PB_6
+#define MOTOR_RIGHT_B PB_7
+#define MOTOR_LEFT_F PB_8
+#define MOTOR_LEFT_B PB_9
 #define LINE_FOLLOW_RIGHT PA3
 #define LINE_FOLLOW_LEFT PA4
 #define IR_SELECT PA11
@@ -30,21 +30,29 @@
 #define RIGHT_CLAW PA_6
 #define I2C_SDA PB11
 #define I2C_SCL PB10
+#define LEFT_ENCODER_1 PC14
+#define LEFT_ENCODER_2 PB_4
+#define RIGHT_ENCODER_1 PC13
+#define RIGHT_ENCODER_2 PB_5
 
 #define REFLECTANCE_THRESHOLD 200
 #define MOTOR_SPEED 65
 #define PID_MAX_INT MOTOR_SPEED / 3
 
-Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 0, 0, 0, 0);
-Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 0, 0, 0, 0);
+Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 180, 0, 180, 0);
+Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 180, 0, 180, 0);
 Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
-// Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
+Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
+Encoder rightEncoder(RIGHT_ENCODER_1, RIGHT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
 PID irPID(20, 8, 1, PID_MAX_INT);
-PID tapePID(20, 8, 0, PID_MAX_INT);
+PID tapePID(25, 10, 0, PID_MAX_INT);
 
+#if DEBUG
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+#endif
+
 
 int abcdefgh = 0;
 
@@ -101,7 +109,12 @@ int tapeError()
   bool leftOnTape = (leftValue > REFLECTANCE_THRESHOLD);
   bool rightOnTape = (rightValue > REFLECTANCE_THRESHOLD);
 
-  if (leftValue > 600 || rightValue > 600)
+#if DEBUG
+  display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
+  display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
+#endif
+
+  if (leftValue > 800 || rightValue > 800)
   {
     return (tapePID.getlastErr());
   }
@@ -129,20 +142,34 @@ int tapeError()
   {
     return (0);
   }
+}
 
-#if DEBUG
-  display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
-  display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
-#endif
+void modulateMotors(int value)
+{
+  if (value > 0)
+  {
+    leftMotor.modulateSpeed(-value);
+  }
+  else if (value < 0)
+  {
+    rightMotor.modulateSpeed(value);
+  }
+  else
+  {
+    rightMotor.modulateSpeed(0);
+    leftMotor.modulateSpeed(0);
+  }
 }
 
 void setup()
 {
   Wire.setSDA(PB11);
   Wire.setSCL(PB10);
+#if DEBUG
   display_handler.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display_handler.setTextSize(1);
   display_handler.setTextColor(SSD1306_WHITE);
+#endif
   pinMode(LINE_FOLLOW_LEFT, INPUT_ANALOG);
   pinMode(LINE_FOLLOW_RIGHT, INPUT_ANALOG);
   pinMode(IR_SELECT, OUTPUT);
@@ -151,25 +178,36 @@ void setup()
   pinMode(ULTARSONIC_LEFT, INPUT);
   // leftMotor.start();
   // rightMotor.start();
-  leftClaw.start();
-  rightClaw.start();
+  // leftClaw.start();
+  // rightClaw.start();
 }
 
 void loop()
 {
+#if DEBUG
   display_handler.clearDisplay();
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
-  tapePID.pid(tapeError());
-  // irPID.pid(irError());
+  display_handler.printf("left: %d \n", leftEncoder.getCount());
+  display_handler.printf("right: %d \n", rightEncoder.getCount());
 
-  // int distance = rightClaw.getDistance();
-  // display_handler.println(distance);
-  // if (distance > 10 && distance < 30)
-  // {
-  //   rightClaw.pickUp();
-  // }
+  // display_handler.printf("0-180: %d\n", map(180,0,180,400,2600));
+  // display_handler.printf("-90-90: %d\n", map(90,-90,90,400,2600));
+#endif
+// leftClaw.start();
+// rightClaw.start();
 
+modulateMotors(tapePID.pid(tapeError()));
+// modulateMotors(irPID.pid(irError()));
+
+int distance = rightClaw.getDistance();
+display_handler.println(distance);
+if (distance > 10 && distance < 30)
+{
+  rightClaw.pickUp();
+}
+#if DEBUG
   display_handler.display();
   abcdefgh++;
+#endif
 };
