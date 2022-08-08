@@ -230,20 +230,9 @@ int distance = rightClaw.getDistance();
 display_handler.println(distance);
 if (distance > 10 && distance < 30)
 {
-  rightMotor.stop();
-  leftMotor.stop();
-  leftMotor.setSpeed(-30);
-  rightMotor.setSpeed(-30);
-  while(rightClaw.getDistance() < 10 || rightClaw.getDistance() > 30){
-    leftMotor.start();
-    rightMotor.start();
-  }
-  rightMotor.stop();
-  leftMotor.stop();
-
+  rightMotor.activeStop();
+  leftMotor.activeStop();
   rightClaw.pickUp();
-  rightMotor.setSpeed(MOTOR_SPEED);
-  leftMotor.setSpeed(MOTOR_SPEED);
   rightMotor.start();
   leftMotor.start();
 }

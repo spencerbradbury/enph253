@@ -27,8 +27,19 @@ void Motor::stop()
     pwm_start(backwardPin, MOTOR_CLOCK_FREQ, 0, RESOLUTION_10B_COMPARE_FORMAT);
 }
 
-void Motor::start()
+void Motor::activeStop()
 {
+    int originalSpeed = this->speed;
+    setSpeed(-40);
+    start();
+    delay(100);
+    stop();
+    setSpeed(originalSpeed);
+}
+
+
+
+void Motor::start(){
     stop();
     if (this->speed > 0)
     {

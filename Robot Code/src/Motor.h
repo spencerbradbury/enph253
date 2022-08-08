@@ -20,6 +20,8 @@ public:
 
     void stop();
 
+    void activeStop();
+
     void start();
 };
 #endif // MOTOR_H
