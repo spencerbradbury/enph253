@@ -44,18 +44,16 @@ Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t u
 
 void Claw::pickUp()
 {
-    digitalWrite(LEDBUILTIN, HIGH);
-    moveServo(clawServo, clawClosed, clawOpen);
-    digitalWrite(LEDBUILTIN, LOW);
-    moveServo(armServo, armUp, armDown);
-    digitalWrite(LEDBUILTIN, HIGH);
-    moveServo(clawServo, clawOpen, clawClosed);
-    digitalWrite(LEDBUILTIN, LOW);
-    moveServo(armServo, armDown, armUp);
-    digitalWrite(LEDBUILTIN, HIGH);
-    moveServo(clawServo, clawClosed, clawOpen);
-    digitalWrite(LEDBUILTIN, LOW);
-    moveServo(clawServo, clawOpen, clawNeutral);
+  clawServo.write(clawOpen);
+  delay(400);
+  moveServo(armServo, armUp, armDown);
+  clawServo.write(clawClosed);
+  delay(400);
+  moveServo(armServo,armDown, armUp);
+  clawServo.write(clawOpen);
+  delay(400);
+  clawServo.write(clawNeutral);
+  delay(400);
 }
 
 void Claw::start()
