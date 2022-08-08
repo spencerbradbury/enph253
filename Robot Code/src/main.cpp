@@ -198,22 +198,11 @@ void setup()
   leftClaw.start();
   rightClaw.start();
   digitalWrite(LEDBUILTIN, HIGH);
-  delay(2000);
+  delay(200);
   digitalWrite(LEDBUILTIN, LOW);
-  delay(2000);
+  delay(200);
 }
 
-int jack = 0;
-
-void loopwe()
-{
-  jack++;
-  display_handler.clearDisplay();
-  display_handler.setCursor(0, 0);
-  display_handler.println(jack);
-  display_handler.display();
-  delay(100);
-}
 
 void loop()
 {
