@@ -54,8 +54,8 @@
 #define RIGHT_ARM_DOWN 65
 #define RIGHT_ARM_VERTICAL -40
 
-// Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, -10, 60, 90, -90);
-// Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, -40, 45, 90, -90);
+Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, LEFT_CLAW_OPEN, LEFT_CLAW_CLOSED, LEFT_CLAW_NEUTRAL, LEFT_ARM_UP, LEFT_ARM_DOWN);
+Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, RIGHT_CLAW_OPEN, RIGHT_CLAW_CLOSED, RIGHT_CLAW_NEUTRAL, RIGHT_ARM_UP, RIGHT_ARM_DOWN);
 Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
@@ -63,11 +63,6 @@ Encoder rightEncoder(RIGHT_ENCODER_1, RIGHT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
 PID irPID(20, 8, 1, PID_MAX_INT);
 PID tapePID(25, 10, 0, PID_MAX_INT);
-
-BetterServo leftClaw(LEFT_CLAW);
-BetterServo leftArm(LEFT_ARM);
-BetterServo rightClaw(RIGHT_CLAW);
-BetterServo rightArm(RIGHT_ARM);
 
 #if DEBUG
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -199,11 +194,6 @@ void setup()
   // rightMotor.start();
   // leftClaw.start();
   // rightClaw.start();
-
-   leftClaw.write(0);
-  rightClaw.write(0);
-   leftArm.write(0);
-  rightArm.write(0);
 }
 
 void loop()
@@ -214,13 +204,6 @@ void loop()
   display_handler.println(abcdefgh);
 
 #endif
-
-leftArm.write(0);
-rightArm.write(0);
-delay(2000);
-leftArm.write(LEFT_ARM_DOWN);
-rightArm.write(RIGHT_ARM_DOWN);
-delay(2000);
 // modulateMotors(tapePID.pid(tapeError()));
 // modulateMotors(irPID.pid(irError()));
 
