@@ -5,6 +5,8 @@
 #define ULTRASONIC_TIMEOUT 4500UL // microseconds
 #define SERVO_STEP_DELAY 15
 
+#define LEDBUILTIN PB2
+
 void Claw::moveServo(BetterServo servo, int start, int end)
 {
   if (start < end)
@@ -25,7 +27,7 @@ void Claw::moveServo(BetterServo servo, int start, int end)
   }
 }
 
-Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClose, int clawNeutral, int armUp, int armDown)
+Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClosed, int clawNeutral, int armUp, int armDown)
 {
   BetterServo armServo(armPin);
   BetterServo clawServo(clawPin);
@@ -42,12 +44,41 @@ Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t u
 
 void Claw::pickUp()
 {
-  moveServo(clawServo, clawClosed, clawOpen);
-  moveServo(armServo, armUp, armDown);
-  moveServo(clawServo, clawOpen, clawClosed);
-  moveServo(armServo, armDown, armUp);
-  moveServo(clawServo, clawClosed, clawOpen);
-  moveServo(clawServo, clawOpen, clawClosed);
+  // clawServo.write(clawOpen);
+  // delay(500);
+  // armServo.write(armDown);
+  // delay(500);
+  // clawServo.write(clawClosed);
+  // delay(500);
+  // armServo.write(armUp);
+  // delay(500);
+  // clawServo.write(clawOpen);
+  // delay(500);
+  // clawServo.write(clawNeutral);
+    digitalWrite(LEDBUILTIN, HIGH);
+    moveServo(clawServo, clawClosed, clawOpen);
+    digitalWrite(LEDBUILTIN, LOW);
+    // delay(500);
+    digitalWrite(LEDBUILTIN, HIGH);
+    moveServo(armServo, armUp, armDown);
+    digitalWrite(LEDBUILTIN, LOW);
+    // delay(500);
+    digitalWrite(LEDBUILTIN, HIGH);
+    moveServo(clawServo, clawOpen, clawClosed);
+    digitalWrite(LEDBUILTIN, LOW);
+    // delay(500);
+    digitalWrite(LEDBUILTIN, HIGH);
+    moveServo(armServo, armDown, armUp);
+    digitalWrite(LEDBUILTIN, LOW);
+    // delay(500);
+    digitalWrite(LEDBUILTIN, HIGH);
+    moveServo(clawServo, clawClosed, clawOpen);
+    digitalWrite(LEDBUILTIN, LOW);
+    // delay(500);
+    digitalWrite(LEDBUILTIN, HIGH);
+    moveServo(clawServo, clawOpen, clawClosed);
+    digitalWrite(LEDBUILTIN, LOW);
+    // delay(500);
 }
 
 void Claw::start()
@@ -64,6 +95,7 @@ int Claw::getDistance()
   digitalWrite(ultraTrig, HIGH);
   delayMicroseconds(10);
   digitalWrite(ultraTrig, LOW);
+  // duration = pulseIn(ultraEcho, HIGH);
   duration = pulseIn(ultraEcho, HIGH, ULTRASONIC_TIMEOUT);
   return ((duration / 2) / 29.1);
 }

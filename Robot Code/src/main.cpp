@@ -1,4 +1,4 @@
-#define DEBUG 0
+#define DEBUG 1
 
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
@@ -43,16 +43,18 @@
 #define LEFT_CLAW_OPEN -10
 #define LEFT_CLAW_CLOSED 60
 #define LEFT_CLAW_NEUTRAL 50
-#define LEFT_ARM_UP 70
+#define LEFT_ARM_UP 65
 #define LEFT_ARM_DOWN -70
 #define LEFT_ARM_VERTICAL 40
 
 #define RIGHT_CLAW_OPEN -40
-#define RIGHT_CLAW_CLOSED 45
+#define RIGHT_CLAW_CLOSED 35
 #define RIGHT_CLAW_NEUTRAL 35
-#define RIGHT_ARM_UP -70
+#define RIGHT_ARM_UP -65
 #define RIGHT_ARM_DOWN 65
 #define RIGHT_ARM_VERTICAL -40
+
+#define LEDBUILTIN PB2
 
 Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, LEFT_CLAW_OPEN, LEFT_CLAW_CLOSED, LEFT_CLAW_NEUTRAL, LEFT_ARM_UP, LEFT_ARM_DOWN);
 Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, RIGHT_CLAW_OPEN, RIGHT_CLAW_CLOSED, RIGHT_CLAW_NEUTRAL, RIGHT_ARM_UP, RIGHT_ARM_DOWN);
@@ -177,6 +179,7 @@ void modulateMotors(int value)
 
 void setup()
 {
+  pinMode(LEDBUILTIN, OUTPUT);
   Wire.setSDA(PB11);
   Wire.setSCL(PB10);
 #if DEBUG
@@ -190,10 +193,26 @@ void setup()
   pinMode(ULTRASONIC_TRIGGER, OUTPUT);
   pinMode(ULTRASONIC_RIGHT, INPUT);
   pinMode(ULTARSONIC_LEFT, INPUT);
-  // leftMotor.start();
-  // rightMotor.start();
-  // leftClaw.start();
-  // rightClaw.start();
+  leftMotor.start();
+  rightMotor.start();
+  leftClaw.start();
+  rightClaw.start();
+  digitalWrite(LEDBUILTIN, HIGH);
+  delay(2000);
+  digitalWrite(LEDBUILTIN, LOW);
+  delay(2000);
+}
+
+int jack = 0;
+
+void loopwe()
+{
+  jack++;
+  display_handler.clearDisplay();
+  display_handler.setCursor(0, 0);
+  display_handler.println(jack);
+  display_handler.display();
+  delay(100);
 }
 
 void loop()
@@ -204,15 +223,30 @@ void loop()
   display_handler.println(abcdefgh);
 
 #endif
-// modulateMotors(tapePID.pid(tapeError()));
+modulateMotors(tapePID.pid(tapeError()));
 // modulateMotors(irPID.pid(irError()));
 
-// int distance = rightClaw.getDistance();
-// display_handler.println(distance);
-// if (distance > 10 && distance < 30)
-// {
-//   rightClaw.pickUp();
-// }
+int distance = rightClaw.getDistance();
+display_handler.println(distance);
+if (distance > 10 && distance < 30)
+{
+  rightMotor.stop();
+  leftMotor.stop();
+  leftMotor.setSpeed(-30);
+  rightMotor.setSpeed(-30);
+  while(rightClaw.getDistance() < 10 || rightClaw.getDistance() > 30){
+    leftMotor.start();
+    rightMotor.start();
+  }
+  rightMotor.stop();
+  leftMotor.stop();
+
+  rightClaw.pickUp();
+  rightMotor.setSpeed(MOTOR_SPEED);
+  leftMotor.setSpeed(MOTOR_SPEED);
+  rightMotor.start();
+  leftMotor.start();
+}
 #if DEBUG
   display_handler.display();
   abcdefgh++;
