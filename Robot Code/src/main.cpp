@@ -1,4 +1,4 @@
-#define DEBUG 1
+#define DEBUG 0
 
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
@@ -7,7 +7,6 @@
 #include "IR.h"
 #include "Claw.h"
 #include "PID.h"
-
 #include "BetterServo.h"
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -41,8 +40,22 @@
 #define MOTOR_SPEED 65
 #define PID_MAX_INT MOTOR_SPEED / 3
 
-Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 90, -90, 90, -90);
-Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 90, -90, 90, -90);
+#define LEFT_CLAW_OPEN -10
+#define LEFT_CLAW_CLOSED 60
+#define LEFT_CLAW_NEUTRAL 50
+#define LEFT_ARM_UP 70
+#define LEFT_ARM_DOWN -70
+#define LEFT_ARM_VERTICAL 40
+
+#define RIGHT_CLAW_OPEN -40
+#define RIGHT_CLAW_CLOSED 45
+#define RIGHT_CLAW_NEUTRAL 35
+#define RIGHT_ARM_UP -70
+#define RIGHT_ARM_DOWN 65
+#define RIGHT_ARM_VERTICAL -40
+
+// Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, -10, 60, 90, -90);
+// Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, -40, 45, 90, -90);
 Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
@@ -50,6 +63,11 @@ Encoder rightEncoder(RIGHT_ENCODER_1, RIGHT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
 PID irPID(20, 8, 1, PID_MAX_INT);
 PID tapePID(25, 10, 0, PID_MAX_INT);
+
+BetterServo leftClaw(LEFT_CLAW);
+BetterServo leftArm(LEFT_ARM);
+BetterServo rightClaw(RIGHT_CLAW);
+BetterServo rightArm(RIGHT_ARM);
 
 #if DEBUG
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -177,10 +195,15 @@ void setup()
   pinMode(ULTRASONIC_TRIGGER, OUTPUT);
   pinMode(ULTRASONIC_RIGHT, INPUT);
   pinMode(ULTARSONIC_LEFT, INPUT);
-  leftMotor.start();
-  rightMotor.start();
-  leftClaw.start();
-  rightClaw.start();
+  // leftMotor.start();
+  // rightMotor.start();
+  // leftClaw.start();
+  // rightClaw.start();
+
+   leftClaw.write(0);
+  rightClaw.write(0);
+   leftArm.write(0);
+  rightArm.write(0);
 }
 
 void loop()
@@ -191,6 +214,13 @@ void loop()
   display_handler.println(abcdefgh);
 
 #endif
+
+leftArm.write(0);
+rightArm.write(0);
+delay(2000);
+leftArm.write(LEFT_ARM_DOWN);
+rightArm.write(RIGHT_ARM_DOWN);
+delay(2000);
 // modulateMotors(tapePID.pid(tapeError()));
 // modulateMotors(irPID.pid(irError()));
 

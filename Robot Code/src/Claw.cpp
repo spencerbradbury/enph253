@@ -53,15 +53,6 @@ void Claw::start()
 {
   armServo.write(armUp);
   clawServo.write(clawClosed);
-  // armServo.write(armUp);
-  // clawServo.write(clawOpen);
-  // delay(2000);
-  // armServo.write(armDown);
-  // clawServo.write(clawClosed);
-  // delay(2000);
-  // armServo.write(armDown);
-  // clawServo.write(clawOpen);
-  // delay(2000);
 }
 
 int Claw::getDistance()
@@ -72,7 +63,6 @@ int Claw::getDistance()
   digitalWrite(ultraTrig, HIGH);
   delayMicroseconds(10);
   digitalWrite(ultraTrig, LOW);
-  // duration = pulseIn(ultraEcho, HIGH);
   duration = pulseIn(ultraEcho, HIGH, ULTRASONIC_TIMEOUT);
   return ((duration / 2) / 29.1);
 }
