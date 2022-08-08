@@ -20,6 +20,8 @@ public:
     BetterServo(PinName servoPin);
 
     void write(int angle);
+
+    void writems(int dutyCycle);
 };
 
 #endif // BETTERSERVO_H

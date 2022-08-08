@@ -8,6 +8,8 @@
 #include "Claw.h"
 #include "PID.h"
 
+#include "BetterServo.h"
+
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1    // This display does not have a reset pin accessible
@@ -39,8 +41,8 @@
 #define MOTOR_SPEED 65
 #define PID_MAX_INT MOTOR_SPEED / 3
 
-Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 180, 0, 180, 0);
-Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 180, 0, 180, 0);
+Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER, ULTARSONIC_LEFT, 90, -90, 90, -90);
+Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER, ULTRASONIC_RIGHT, 90, -90, 90, -90);
 Motor leftMotor(MOTOR_LEFT_F, MOTOR_LEFT_B, MOTOR_SPEED);
 Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
@@ -52,7 +54,6 @@ PID tapePID(25, 10, 0, PID_MAX_INT);
 #if DEBUG
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #endif
-
 
 int abcdefgh = 0;
 
@@ -176,10 +177,10 @@ void setup()
   pinMode(ULTRASONIC_TRIGGER, OUTPUT);
   pinMode(ULTRASONIC_RIGHT, INPUT);
   pinMode(ULTARSONIC_LEFT, INPUT);
-  // leftMotor.start();
-  // rightMotor.start();
-  // leftClaw.start();
-  // rightClaw.start();
+  leftMotor.start();
+  rightMotor.start();
+  leftClaw.start();
+  rightClaw.start();
 }
 
 void loop()
@@ -188,24 +189,17 @@ void loop()
   display_handler.clearDisplay();
   display_handler.setCursor(0, 0);
   display_handler.println(abcdefgh);
-  display_handler.printf("left: %d \n", leftEncoder.getCount());
-  display_handler.printf("right: %d \n", rightEncoder.getCount());
 
-  // display_handler.printf("0-180: %d\n", map(180,0,180,400,2600));
-  // display_handler.printf("-90-90: %d\n", map(90,-90,90,400,2600));
 #endif
-// leftClaw.start();
-// rightClaw.start();
-
-modulateMotors(tapePID.pid(tapeError()));
+// modulateMotors(tapePID.pid(tapeError()));
 // modulateMotors(irPID.pid(irError()));
 
-int distance = rightClaw.getDistance();
-display_handler.println(distance);
-if (distance > 10 && distance < 30)
-{
-  rightClaw.pickUp();
-}
+// int distance = rightClaw.getDistance();
+// display_handler.println(distance);
+// if (distance > 10 && distance < 30)
+// {
+//   rightClaw.pickUp();
+// }
 #if DEBUG
   display_handler.display();
   abcdefgh++;

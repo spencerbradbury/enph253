@@ -10,7 +10,11 @@ BetterServo::BetterServo(PinName servoPin)
 
 void BetterServo::write(int angle)
 {
-    
-    int dutyCycle = map(angle, 0, 180, 400, 2600);
+    int dutyCycle = map(angle, -90, 90, 400, 2600);
+    pwm_start(servoPin, 50, dutyCycle, TimerCompareFormat_t::MICROSEC_COMPARE_FORMAT);
+}
+
+void BetterServo::writems(int dutyCycle)
+{
     pwm_start(servoPin, 50, dutyCycle, TimerCompareFormat_t::MICROSEC_COMPARE_FORMAT);
 }

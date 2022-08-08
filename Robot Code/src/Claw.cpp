@@ -52,11 +52,13 @@ void Claw::pickUp()
 void Claw::start()
 {
   armServo.write(armUp);
-  clawServo.write(clawOpen);
-  delay(2000);
-  armServo.write(armDown);
   clawServo.write(clawClosed);
-  delay(2000);
+  // armServo.write(armUp);
+  // clawServo.write(clawOpen);
+  // delay(2000);
+  // armServo.write(armDown);
+  // clawServo.write(clawClosed);
+  // delay(2000);
   // armServo.write(armDown);
   // clawServo.write(clawOpen);
   // delay(2000);
