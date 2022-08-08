@@ -47,9 +47,9 @@
 #define LEFT_ARM_DOWN -65
 #define LEFT_ARM_VERTICAL 40
 
-#define RIGHT_CLAW_OPEN -40
-#define RIGHT_CLAW_CLOSED 35
-#define RIGHT_CLAW_NEUTRAL 35
+#define RIGHT_CLAW_OPEN -30
+#define RIGHT_CLAW_CLOSED 55
+#define RIGHT_CLAW_NEUTRAL 45
 #define RIGHT_ARM_UP -65
 #define RIGHT_ARM_DOWN 45
 #define RIGHT_ARM_VERTICAL -40
@@ -68,6 +68,8 @@ PID tapePID(25, 10, 0, PID_MAX_INT);
 
 #if DEBUG
 Adafruit_SSD1306 display_handler(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+BetterServo rightClawServo(RIGHT_CLAW);
+BetterServo leftClawServo(LEFT_CLAW);
 #endif
 
 int abcdefgh = 0;
@@ -203,7 +205,6 @@ void setup()
   delay(200);
 }
 
-
 void loop()
 {
 #if DEBUG
@@ -212,19 +213,19 @@ void loop()
   display_handler.println(abcdefgh);
 
 #endif
-// modulateMotors(tapePID.pid(tapeError()));
-// modulateMotors(irPID.pid(irError()));
+  // modulateMotors(tapePID.pid(tapeError()));
+  // modulateMotors(irPID.pid(irError()));
 
-int distance = rightClaw.getDistance();
-display_handler.println(distance);
-if (distance > 10 && distance < 30)
-{
-  // rightMotor.activeStop();
-  // leftMotor.activeStop();
-  rightClaw.pickUp();
-  // rightMotor.start();
-  // leftMotor.start();
-}
+  int distance = leftClaw.getDistance();
+  display_handler.println(distance);
+  if (distance > 10 && distance < 35)
+  {
+    // rightMotor.activeStop();
+    // leftMotor.activeStop();
+    leftClaw.pickUp();
+    // rightMotor.start();
+    // leftMotor.start();
+  }
 #if DEBUG
   display_handler.display();
   abcdefgh++;
