@@ -44,14 +44,14 @@
 #define LEFT_CLAW_CLOSED 60
 #define LEFT_CLAW_NEUTRAL 50
 #define LEFT_ARM_UP 65
-#define LEFT_ARM_DOWN -70
+#define LEFT_ARM_DOWN -65
 #define LEFT_ARM_VERTICAL 40
 
 #define RIGHT_CLAW_OPEN -40
 #define RIGHT_CLAW_CLOSED 35
 #define RIGHT_CLAW_NEUTRAL 35
 #define RIGHT_ARM_UP -65
-#define RIGHT_ARM_DOWN 65
+#define RIGHT_ARM_DOWN 45
 #define RIGHT_ARM_VERTICAL -40
 
 #define LEDBUILTIN PB2
@@ -193,8 +193,8 @@ void setup()
   pinMode(ULTRASONIC_TRIGGER, OUTPUT);
   pinMode(ULTRASONIC_RIGHT, INPUT);
   pinMode(ULTARSONIC_LEFT, INPUT);
-  leftMotor.start();
-  rightMotor.start();
+  // leftMotor.start();
+  // rightMotor.start();
   leftClaw.start();
   rightClaw.start();
   digitalWrite(LEDBUILTIN, HIGH);
@@ -223,18 +223,18 @@ void loop()
   display_handler.println(abcdefgh);
 
 #endif
-modulateMotors(tapePID.pid(tapeError()));
+// modulateMotors(tapePID.pid(tapeError()));
 // modulateMotors(irPID.pid(irError()));
 
 int distance = rightClaw.getDistance();
 display_handler.println(distance);
 if (distance > 10 && distance < 30)
 {
-  rightMotor.activeStop();
-  leftMotor.activeStop();
+  // rightMotor.activeStop();
+  // leftMotor.activeStop();
   rightClaw.pickUp();
-  rightMotor.start();
-  leftMotor.start();
+  // rightMotor.start();
+  // leftMotor.start();
 }
 #if DEBUG
   display_handler.display();
