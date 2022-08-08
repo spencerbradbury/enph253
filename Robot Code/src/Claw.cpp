@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "BetterServo.h"
 
-#define ULTRASONIC_TIMEOUT 4500UL // microseconds
+#define ULTRASONIC_TIMEOUT 5000UL // microseconds
 #define SERVO_STEP_DELAY 15
 
 #define LEDBUILTIN PB2
@@ -44,41 +44,18 @@ Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t u
 
 void Claw::pickUp()
 {
-  // clawServo.write(clawOpen);
-  // delay(500);
-  // armServo.write(armDown);
-  // delay(500);
-  // clawServo.write(clawClosed);
-  // delay(500);
-  // armServo.write(armUp);
-  // delay(500);
-  // clawServo.write(clawOpen);
-  // delay(500);
-  // clawServo.write(clawNeutral);
     digitalWrite(LEDBUILTIN, HIGH);
     moveServo(clawServo, clawClosed, clawOpen);
     digitalWrite(LEDBUILTIN, LOW);
-    // delay(500);
-    digitalWrite(LEDBUILTIN, HIGH);
     moveServo(armServo, armUp, armDown);
-    digitalWrite(LEDBUILTIN, LOW);
-    // delay(500);
     digitalWrite(LEDBUILTIN, HIGH);
     moveServo(clawServo, clawOpen, clawClosed);
     digitalWrite(LEDBUILTIN, LOW);
-    // delay(500);
-    digitalWrite(LEDBUILTIN, HIGH);
     moveServo(armServo, armDown, armUp);
-    digitalWrite(LEDBUILTIN, LOW);
-    // delay(500);
     digitalWrite(LEDBUILTIN, HIGH);
     moveServo(clawServo, clawClosed, clawOpen);
     digitalWrite(LEDBUILTIN, LOW);
-    // delay(500);
-    digitalWrite(LEDBUILTIN, HIGH);
-    moveServo(clawServo, clawOpen, clawClosed);
-    digitalWrite(LEDBUILTIN, LOW);
-    // delay(500);
+    moveServo(clawServo, clawOpen, clawNeutral);
 }
 
 void Claw::start()
