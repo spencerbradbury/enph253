@@ -29,12 +29,11 @@ void Motor::stop()
 
 void Motor::activeStop()
 {
-    int originalSpeed = this->speed;
     setSpeed(-40);
     start();
     delay(100);
     stop();
-    setSpeed(originalSpeed);
+    setSpeed(defaultSpeed);
 }
 
 
