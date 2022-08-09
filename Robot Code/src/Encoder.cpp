@@ -2,9 +2,6 @@
 #include <Arduino.h>
 // #include <digital_io.h>
 
-#define COUNT_PER_ROTATION 144         // 1441 before we divided by 10
-#define WHEEL_DIAMTER 111              // mm or 11.1cm
-#define DISTANCE_PER_COUNT 4.075579659 // mm
 
 void Encoder::handleInterrupt()
 {
@@ -39,7 +36,7 @@ int Encoder::getCount()
 
 int Encoder::getDistance()
 {
-    return (this->count / COUNT_PER_ROTATION * PI * WHEEL_DIAMTER / 10.0);
+    return (this->count * DISTANCE_PER_COUNT / 10.0);
 }
 
 void Encoder::resetCount()

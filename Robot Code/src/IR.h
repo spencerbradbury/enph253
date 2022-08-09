@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include <utility>
 
+#define leftEye HIGH
+#define rightEye LOW
+
 class IR
 {
 private:

@@ -2,11 +2,6 @@
 #include <Arduino.h>
 #include "BetterServo.h"
 
-#define ULTRASONIC_TIMEOUT 5000UL // microseconds
-#define SERVO_STEP_DELAY 15
-
-#define LEDBUILTIN PB2
-
 void Claw::moveServo(BetterServo servo, int start, int end)
 {
   if (start < end)

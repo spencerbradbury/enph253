@@ -7,9 +7,6 @@ brown -> mosfet clear - high = clear, clear before i read, add a delay if shit i
 #include <Arduino.h>
 #include <utility>
 
-#define leftEye HIGH
-#define rightEye LOW
-
 IR::IR(uint8_t readPin, uint8_t eyeSelectPin, uint8_t clearPin)
 {
     this->readPin = readPin;

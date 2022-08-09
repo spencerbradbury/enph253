@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include <BetterServo.h>
 
+#define ULTRASONIC_TIMEOUT 5000UL // microseconds
+#define SERVO_STEP_DELAY 15
+
 class Claw
 {
 private:
