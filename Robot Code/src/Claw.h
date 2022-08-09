@@ -10,6 +10,8 @@
 class Claw
 {
 private:
+    bool seeMagnet;
+
     int armUp;
     int armDown;
     int armVertical;
@@ -20,11 +22,14 @@ private:
     BetterServo clawServo;
     uint8_t ultraTrig;
     uint8_t ultraEcho;
+    uint8_t hallSensor;
 
     void moveServo(BetterServo servo, int start, int end);
 
+    void seeBomb();
+
 public:
-    Claw(PinName arm_servo, PinName claw_servo, uint8_t ultrasonic_trigger, uint8_t ultrasonic_echo, int claw_open, int claw_close, int claw_neutral, int arm_up, int arm_down, int arm_vertical);
+    Claw(PinName arm_servo, PinName claw_servo, uint8_t ultrasonic_trigger, uint8_t ultrasonic_echo, uint8_t hall_sensor, int claw_open, int claw_close, int claw_neutral, int arm_up, int arm_down, int arm_vertical);
 
     void start();
 
