@@ -22,7 +22,7 @@ void Claw::moveServo(BetterServo servo, int start, int end)
   }
 }
 
-Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClosed, int clawNeutral, int armUp, int armDown)
+Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t ultrasonicEcho, int clawOpen, int clawClosed, int clawNeutral, int armUp, int armDown, int armVertical)
 {
   BetterServo armServo(armPin);
   BetterServo clawServo(clawPin);
@@ -35,25 +35,26 @@ Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t u
   this->clawNeutral = clawNeutral;
   this->armUp = armUp;
   this->armDown = armDown;
+  this->armVertical = armVertical;
 }
 
 void Claw::pickUp()
 {
+  moveServo(armServo, armVertical, armDown/6);
   clawServo.write(clawOpen);
   delay(400);
-  moveServo(armServo, armUp, armDown);
+  moveServo(armServo,armDown/6, armDown);
   clawServo.write(clawClosed);
   delay(400);
   moveServo(armServo,armDown, armUp);
-  clawServo.write(clawOpen);
-  delay(400);
   clawServo.write(clawNeutral);
   delay(400);
+  moveServo(armServo, armUp, armVertical);
 }
 
 void Claw::start()
 {
-  armServo.write(armUp);
+  armServo.write(armVertical);
   clawServo.write(clawNeutral);
 }
 
