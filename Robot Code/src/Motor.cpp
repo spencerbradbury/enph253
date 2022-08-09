@@ -33,7 +33,7 @@ void Motor::stop()
 
 void Motor::activeStop()
 {
-    setSpeed(-40);
+    setSpeed(-speed);
     start();
     delay(100);
     stop();
