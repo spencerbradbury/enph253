@@ -12,6 +12,7 @@ class Claw
 private:
     int armUp;
     int armDown;
+    int armVertical;
     int clawOpen;
     int clawClosed;
     int clawNeutral;
@@ -23,7 +24,7 @@ private:
     void moveServo(BetterServo servo, int start, int end);
 
 public:
-    Claw(PinName arm_servo, PinName claw_servo, uint8_t ultrasonic_trigger, uint8_t ultrasonic_echo, int claw_open, int claw_close, int claw_neutral, int arm_up, int arm_down);
+    Claw(PinName arm_servo, PinName claw_servo, uint8_t ultrasonic_trigger, uint8_t ultrasonic_echo, int claw_open, int claw_close, int claw_neutral, int arm_up, int arm_down, int arm_vertical);
 
     void start();
 
