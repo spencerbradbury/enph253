@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#define MOTOR_CLOCK_FREQ 100 // might have to change to 50
+
 class Motor
 {
 private:
@@ -17,6 +19,8 @@ public:
     void modulateSpeed(int value);
 
     void setSpeed(int speed);
+
+    void setDefaultSpeed(int speed);
 
     void stop();
 
