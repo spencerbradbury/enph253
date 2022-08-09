@@ -3,10 +3,10 @@
 
 #include <Arduino.h>
 
-#define COUNT_PER_ROTATION 1441        
-#define WHEEL_DIAMTER 111              // mm or 11.1cm
-#define DISTANCE_PER_COUNT PI * WHEEL_DIAMTER / COUNT_PER_ROTATION // mm
-#define ANGLE_PER_COUNT (DISTANCE_PER_COUNT/114.3) * 180 / PI
+#define COUNT_PER_ROTATION 1441.0      
+#define WHEEL_DIAMTER 111.0             // mm or 11.1cm
+#define DISTANCE_PER_COUNT PI * WHEEL_DIAMTER / COUNT_PER_ROTATION // mm 0.241996
+#define ANGLE_PER_COUNT (DISTANCE_PER_COUNT/114.3) * 180.0 / PI      // 0.12131
 
 class Encoder
 {
