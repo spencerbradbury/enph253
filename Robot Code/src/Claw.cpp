@@ -62,28 +62,29 @@ void Claw::pickUp()
 {
     if (!seeMagnet)
     {
-        moveServo(armServo, armVertical, armDown / 6);
+        moveServo(armServo, armVertical, 7 * armDown / 20);
     }
     if (!seeMagnet)
     {
         clawServo.write(clawOpen);
         delay(400);
+        clawServo.write(clawClosed);
+        delay(300);
+        clawServo.write(clawOpen);
+        delay(300);
     }
     if (!seeMagnet)
     {
-        moveServo(armServo, armDown / 6, armDown);
-    }
-    if (!seeMagnet)
-    {
-        clawServo.write(clawNeutral);
-        delay(400);
+        moveServo(armServo, 7* armDown / 20, armDown);
     }
     if (!seeMagnet)
     {
         clawServo.write(clawClosed);
         delay(400);
     }
-    moveServo(armServo, armDown, armUp);
+    // moveServo(armServo, armDown, armUp);
+    armServo.write(armUp);
+    delay(400);
     clawServo.write(clawNeutral);
     delay(400);
     moveServo(armServo, armUp, armVertical);
@@ -107,4 +108,8 @@ int Claw::getDistance()
     // duration = pulseIn(ultraEcho, HIGH);
     duration = pulseIn(ultraEcho, HIGH, ULTRASONIC_TIMEOUT);
     return ((duration / 2) / 29.1);
+}
+
+void Claw::armIn(){
+    armServo.write(armUp);
 }
