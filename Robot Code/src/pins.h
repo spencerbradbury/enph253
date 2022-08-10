@@ -33,5 +33,6 @@
 #define JOYSTICK_CLICK PC15
 #define LEFT_ENCODER_1 PC14
 #define RIGHT_ENCODER_2 PC_13
+#define LEDBUILTIN PB2
 
 #endif // PINS_H
