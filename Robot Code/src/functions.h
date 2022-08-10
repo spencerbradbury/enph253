@@ -7,4 +7,8 @@ int tapeError();
 
 void modulateMotors(int value);
 
+void turn(int angle);
+
+void driveSlowly(int distance);
+
 #endif // FUNCTIONS_H
