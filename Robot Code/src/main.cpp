@@ -90,6 +90,9 @@ int sonarHits = 0;
 int doubleCheckHits = 0;
 int sonarResiliance = 5;
 int doubleCheckResiliance = 2;
+int idolCount = 2;
+int irCatch = 0;
+int irCatchThreshold = 5;
 
 #if DEBUG
 int hitsRequired[5] = {3, 2, 1, 1, 1};
@@ -98,7 +101,6 @@ int doubleCheckHitsRequired[5] = {10, 10, 1, 1, 1};
 int hitsRequired[5] = {20, 15, 1, 1, 1};
 int doubleCheckHitsRequired[5] = {10, 10, 1, 1, 1};
 #endif
-int idolCount = 0;
 float angles[3] = {10.0, 15.0, 20.0};
 
 enum States
@@ -123,7 +125,7 @@ static const char *States_str[] = {
 
 States state;
 
-//Data.first is right, second is left
+// Data.first is right, second is left
 int irError()
 {
     std::pair<int, int> data = IRSensors.read();
@@ -178,13 +180,16 @@ int tapeError()
     bool rightOnTape = (rightValue > REFLECTANCE_THRESHOLD);
 
 #if DEBUG
-    // display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
-    // display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
+    display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
+    display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
 #endif
 
     if (leftValue > EDGE_THRESHOLD || rightValue > EDGE_THRESHOLD)
     {
-        state = ChickenWire;
+        if (idolCount == 1)
+        {
+            state = ChickenWire;
+        }
         return (tapePID.getlastErr());
     }
 
@@ -213,7 +218,7 @@ int tapeError()
     }
 }
 
-//Positive Value Turns Left
+// Positive Value Turns Left
 void modulateMotors(int value)
 {
     if (value > 0)
@@ -249,13 +254,11 @@ void setup()
     pinMode(ULTRASONIC_RIGHT, INPUT);
     pinMode(ULTRASONIC_LEFT, INPUT);
     pinMode(HALL_SENSOR, INPUT_PULLUP);
-    leftMotor.setSpeed(MOTOR_SPEED >> 1);
-    rightMotor.setSpeed(MOTOR_SPEED >> 1);
     leftMotor.start();
     rightMotor.start();
     leftClaw.start();
     rightClaw.start();
-    state = TapeFollow;
+    state = PassArch;
 }
 
 void loop()
@@ -418,22 +421,51 @@ void loop()
         rightMotor.setDefaultSpeed(MOTOR_SPEED);
         leftMotor.setDefaultSpeed(MOTOR_SPEED);
 
-        state = TapeFollow;
+        if (idolCount == 2)
+        {
+
+            state = PassArch;
+        }
+        else
+        {
+            state = TapeFollow;
+        }
         break;
 
     case PassArch:
+        // #if DEBUG
+        //         display_handler.display();
+        // #endif
+        rightClaw.armIn();
+        leftClaw.armIn();
         leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
         rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+        tapePID.setKP(11);
+        tapePID.setKD(2);
         modulateMotors(tapePID.pid(tapeError()));
+        if (irError() != 0)
+        {
+            irCatch++;
+            if (irCatch > irCatchThreshold)
+            {
+                leftMotor.modulateSpeed(0);
+                rightMotor.modulateSpeed(0);
+                delay(250);
+                state = IRFollow;
+                tapePID.setKP(25);
+                tapePID.setKD(8);
+                leftMotor.setDefaultSpeed(MOTOR_SPEED);
+                rightMotor.setDefaultSpeed(MOTOR_SPEED);
+            }
+        }
 
-
-
-    break;
+        break;
 
     case IRFollow:
 #if DEBUG
         // display_handler.display();
 #endif
+        rightClaw.start();
         modulateMotors(irPID.pid(irError()));
         break;
 
