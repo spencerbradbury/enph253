@@ -8,43 +8,11 @@
 #include "Claw.h"
 #include "PID.h"
 #include "BetterServo.h"
+#include "pins.h"
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET -1    // This display does not have a reset pin accessible
-
-#define ULTRASONIC_TRIGGER_RIGHT PB12
-#define ULTRASONIC_LEFT PB13
-#define ULTRASONIC_RIGHT PB14
-#define HALL_SENSOR PB15
-#define BRIDGE_SERVO PA_8
-#define FACE_SERVO PA_9
-#define ULTRASONIC_TRIGGER_LEFT PA10
-#define IR_SELECT PA11
-#define IR_RESET PA12
-#define LEFT_EDGE PA15
-#define RIGHT_EDGE PB3
-#define LEFT_ENCODER_2 PB_4
-#define RIGHT_ENCODER_1 PB5
-#define MOTOR_RIGHT_F PB_6
-#define MOTOR_RIGHT_B PB_7
-#define MOTOR_LEFT_F PB_8
-#define MOTOR_LEFT_B PB_9
-#define I2C_SDA PB11
-#define I2C_SCL PB10
-#define LEFT_ARM PB_1
-#define LEFT_CLAW PB_0
-#define RIGHT_ARM PA_7
-#define RIGHT_CLAW PA_6
-#define IR_READ PA5
-#define LINE_FOLLOW_LEFT PA4
-#define LINE_FOLLOW_RIGHT PA3
-#define SPARE_PIN_2 PA2
-#define JOYSTICK_LR PA1
-#define JOYSTICK_UD PA0
-#define JOYSTICK_CLICK PC15
-#define LEFT_ENCODER_1 PC14
-#define RIGHT_ENCODER_2 PC_13
 
 #define REFLECTANCE_THRESHOLD 200
 #define EDGE_THRESHOLD 800
@@ -73,7 +41,7 @@ Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
 Encoder rightEncoder(RIGHT_ENCODER_1, RIGHT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
-PID irPID(10, 4, 1, PID_MAX_INT);
+PID irPID(12, 4, 1, PID_MAX_INT);
 PID tapePID(25, 10, 0, PID_MAX_INT);
 
 #if DEBUG
@@ -90,16 +58,20 @@ int sonarHits = 0;
 int doubleCheckHits = 0;
 int sonarResiliance = 5;
 int doubleCheckResiliance = 2;
-int idolCount = 2;
+int idolCount = 0;
 int irCatch = 0;
 int irCatchThreshold = 5;
+int distance = 0;
+int startingCount;
+int referenceCount;
+int referenceDistance;
 
 #if DEBUG
-int hitsRequired[5] = {3, 2, 1, 1, 1};
-int doubleCheckHitsRequired[5] = {10, 10, 1, 1, 1};
+int hitsRequired[4] = {3, 2, 1, 1};
+int doubleCheckHitsRequired[4] = {10, 10, 1, 1};
 #else
-int hitsRequired[5] = {20, 15, 1, 1, 1};
-int doubleCheckHitsRequired[5] = {10, 10, 1, 1, 1};
+int hitsRequired[4] = {20, 15, 15, 1};
+int doubleCheckHitsRequired[4] = {10, 10, 10, 1};
 #endif
 float angles[3] = {10.0, 15.0, 20.0};
 
@@ -186,7 +158,7 @@ int tapeError()
 
     if (leftValue > EDGE_THRESHOLD || rightValue > EDGE_THRESHOLD)
     {
-        if (idolCount == 1)
+        if (idolCount <= 1)
         {
             state = ChickenWire;
         }
@@ -258,7 +230,7 @@ void setup()
     rightMotor.start();
     leftClaw.start();
     rightClaw.start();
-    state = PassArch;
+    state = TapeFollow;
 }
 
 void loop()
@@ -273,6 +245,8 @@ void loop()
     display_handler.printf("State: %s\n", States_str[state]);
     // display_handler.printf("rdist: %d\n", rdistanceTravelled);
     // display_handler.printf("Hits: %d\n", sonarHits);
+    display_handler.display();
+    abcdefgh++;
 #endif
 
     switch (state)
@@ -290,11 +264,11 @@ void loop()
                 leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
                 tapePID.setKP(13);
                 tapePID.setKD(4);
-                int distance = rightClaw.getDistance();
+                distance = rightClaw.getDistance();
 #if DEBUG
                 display_handler.println(distance);
 #endif
-                if (distance > 10 && distance < 28)
+                if (distance > 10 && distance < 32)
                 {
                     sonarHits++;
                 }
@@ -325,7 +299,7 @@ void loop()
                         {
                             leftMotor.setSpeed(20);
                             leftMotor.start();
-                        } while (rightClaw.getDistance() >= 16);
+                        } while (rightClaw.getDistance() >= 22);
                         leftMotor.activeStop();
                         lastPickupDistance = rightEncoder.getDistance();
                         rightClaw.pickUp();
@@ -343,11 +317,6 @@ void loop()
                     state = FindTape;
                 }
             }
-        }
-        else
-        {
-            rightClaw.armIn();
-            leftClaw.armIn();
         }
         break;
 
@@ -380,7 +349,7 @@ void loop()
             {
                 if (!j)
                 {
-                    int startingCount = rightEncoder.getCount();
+                    startingCount = rightEncoder.getCount();
                     rightMotor.setSpeed(30);
                     leftMotor.setSpeed(-30);
                     rightMotor.start();
@@ -398,7 +367,7 @@ void loop()
                 }
                 else
                 {
-                    int startingCount = leftEncoder.getCount();
+                    startingCount = leftEncoder.getCount();
                     leftMotor.setSpeed(30);
                     rightMotor.setSpeed(-30);
                     rightMotor.start();
@@ -439,25 +408,52 @@ void loop()
         rightClaw.armIn();
         leftClaw.armIn();
         leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+        leftMotor.setSpeed(MOTOR_SPEED >> 1);
         rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
-        tapePID.setKP(11);
-        tapePID.setKD(2);
-        modulateMotors(tapePID.pid(tapeError()));
-        if (irError() != 0)
+        rightMotor.setSpeed(MOTOR_SPEED >> 1);
+        referenceDistance = rightEncoder.getDistance();
+
+        for (int i = 0; i < 3; i++)
         {
-            irCatch++;
-            if (irCatch > irCatchThreshold)
+            do
             {
-                leftMotor.modulateSpeed(0);
-                rightMotor.modulateSpeed(0);
-                delay(250);
-                state = IRFollow;
-                tapePID.setKP(25);
-                tapePID.setKD(8);
-                leftMotor.setDefaultSpeed(MOTOR_SPEED);
-                rightMotor.setDefaultSpeed(MOTOR_SPEED);
+                leftMotor.start();
+                rightMotor.start();
+            } while ((rightEncoder.getDistance() - referenceDistance) < 10);
+
+            leftMotor.activeStop();
+            rightMotor.activeStop();
+
+            referenceCount = rightEncoder.getCount();
+            while ((rightEncoder.getCount() - referenceCount) < 69)
+            {
+                leftMotor.setSpeed(-30);
+                rightMotor.setSpeed(30);
+                leftMotor.start();
+                rightMotor.start();
             }
+
+            leftMotor.activeStop();
+            rightMotor.activeStop();
         }
+
+        leftMotor.setSpeed(MOTOR_SPEED >> 1);
+        rightMotor.setSpeed(MOTOR_SPEED >> 1);
+
+        //         if (irError() != 0)
+        // {
+        //     irCatch++;
+        //     if (irCatch > irCatchThreshold)
+        //     {
+        //         leftMotor.modulateSpeed(0);
+        //         rightMotor.modulateSpeed(0);
+        //         delay(250);
+        //         rightEncoder.resetCount();
+        //         state = IRFollow;
+        //     }
+        // }
+
+        state = IRFollow;
 
         break;
 
@@ -466,26 +462,67 @@ void loop()
         // display_handler.display();
 #endif
         rightClaw.start();
-        modulateMotors(irPID.pid(irError()));
-        break;
+        if (rightEncoder.getDistance() > 100)
+        {
+            rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+            leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+            irPID.setKP(8);
+            irPID.setKD(2);
+            distance = rightClaw.getDistance();
+            if (distance > 10 && distance < 28)
+            {
+                sonarHits++;
+            }
+            else
+            {
+                sonarResiliance--;
+                if (sonarResiliance <= 0)
+                {
+                    sonarHits = 0;
+                }
+            }
+            if (sonarHits >= hitsRequired[idolCount])
+            {
+                rightMotor.activeStop();
+                leftMotor.activeStop();
 
-    case Bridge:
+                for (int i = 0; i < doubleCheckHitsRequired[idolCount]; i++)
+                {
+                    int doubleCheckDistance = rightClaw.getDistance();
+                    if (distance > 10 && distance < 25)
+                    {
+                        doubleCheckHits++;
+                    }
+                }
+                if (doubleCheckHits >= (doubleCheckHitsRequired[idolCount] - doubleCheckResiliance))
+                {
+                    do
+                    {
+                        leftMotor.setSpeed(20);
+                        leftMotor.start();
+                    } while (rightClaw.getDistance() >= 16);
+                    leftMotor.activeStop();
+                    rightClaw.pickUp();
+                    idolCount++;
+                }
+            }
+            modulateMotors(irPID.pid(irError()));
+            break;
+
+        case Bridge:
 #if DEBUG
-        display_handler.display();
+            display_handler.display();
 #endif
-        break;
+            break;
 
-    case DropIdols:
+        case DropIdols:
 #if DEBUG
-        display_handler.display();
+            display_handler.display();
 #endif
-        break;
+            break;
 
-    default:
-        break;
+        default:
+            break;
+        }
     }
-#if DEBUG
-    display_handler.display();
-    abcdefgh++;
-#endif
-};
+}
