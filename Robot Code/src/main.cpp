@@ -1,4 +1,4 @@
-#define DEBUG 1
+#define DEBUG 0
 
 #include <Arduino.h>
 #include <Adafruit_SSD1306.h>
@@ -73,7 +73,7 @@ Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
 Encoder rightEncoder(RIGHT_ENCODER_1, RIGHT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
-PID irPID(20, 8, 1, PID_MAX_INT);
+PID irPID(10, 4, 1, PID_MAX_INT);
 PID tapePID(25, 10, 0, PID_MAX_INT);
 
 #if DEBUG
@@ -90,8 +90,10 @@ int sonarHits = 0;
 int doubleCheckHits = 0;
 int sonarResiliance = 5;
 int doubleCheckResiliance = 2;
+
 #if DEBUG
 int hitsRequired[5] = {3, 2, 1, 1, 1};
+int doubleCheckHitsRequired[5] = {10, 10, 1, 1, 1};
 #else
 int hitsRequired[5] = {20, 15, 1, 1, 1};
 int doubleCheckHitsRequired[5] = {10, 10, 1, 1, 1};
@@ -104,6 +106,7 @@ enum States
     TapeFollow,
     ChickenWire,
     FindTape,
+    PassArch,
     IRFollow,
     Bridge,
     DropIdols,
@@ -113,12 +116,14 @@ static const char *States_str[] = {
     "TapeFollow",
     "ChickenWire",
     "FindTape",
+    "PassArch",
     "IRFollow",
     "Bridge",
     "DropIdols"};
 
 States state;
 
+//Data.first is right, second is left
 int irError()
 {
     std::pair<int, int> data = IRSensors.read();
@@ -126,39 +131,39 @@ int irError()
     int rawError = data.first - data.second;
 
 #if DEBUG
-    display_handler.printf("left: %d \n", data.first);
-    display_handler.printf("right: %d \n", data.second);
+    display_handler.printf("right: %d \n", data.first);
+    display_handler.printf("left: %d \n", data.second);
     display_handler.printf("Error: %d \n", data.first - data.second);
 #endif
 
-    if (rawError > 200)
-    {
-        return (5);
-    }
-
-    if (rawError > 100)
-    {
-        return (3);
-    }
-
-    if (rawError > 20)
-    {
-        return (1);
-    }
-
-    if (rawError < -200)
+    if (rawError > 300)
     {
         return (-5);
     }
 
-    if (rawError < -100)
+    if (rawError > 100)
     {
         return (-3);
     }
 
-    if (rawError < -20)
+    if (rawError > 10)
     {
         return (-1);
+    }
+
+    if (rawError < -300)
+    {
+        return (5);
+    }
+
+    if (rawError < -100)
+    {
+        return (3);
+    }
+
+    if (rawError < -10)
+    {
+        return (1);
     }
 
     return (0);
@@ -173,8 +178,8 @@ int tapeError()
     bool rightOnTape = (rightValue > REFLECTANCE_THRESHOLD);
 
 #if DEBUG
-    display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
-    display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
+    // display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
+    // display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
 #endif
 
     if (leftValue > EDGE_THRESHOLD || rightValue > EDGE_THRESHOLD)
@@ -208,6 +213,7 @@ int tapeError()
     }
 }
 
+//Positive Value Turns Left
 void modulateMotors(int value)
 {
     if (value > 0)
@@ -243,13 +249,13 @@ void setup()
     pinMode(ULTRASONIC_RIGHT, INPUT);
     pinMode(ULTRASONIC_LEFT, INPUT);
     pinMode(HALL_SENSOR, INPUT_PULLUP);
-    // leftMotor.start();
-    // rightMotor.start();
-    // leftClaw.start();
-    // rightClaw.start();
+    leftMotor.setSpeed(MOTOR_SPEED >> 1);
+    rightMotor.setSpeed(MOTOR_SPEED >> 1);
+    leftMotor.start();
+    rightMotor.start();
+    leftClaw.start();
+    rightClaw.start();
     state = TapeFollow;
-    rightArmServo.write(7*RIGHT_ARM_DOWN/20);
-    rightClawServo.write(RIGHT_CLAW_CLOSED);
 }
 
 void loop()
@@ -262,178 +268,190 @@ void loop()
     display_handler.println(abcdefgh);
     int duration;
     display_handler.printf("State: %s\n", States_str[state]);
-    display_handler.printf("rdist: %d\n", rdistanceTravelled);
-    display_handler.printf("Hits: %d\n", sonarHits);
+    // display_handler.printf("rdist: %d\n", rdistanceTravelled);
+    // display_handler.printf("Hits: %d\n", sonarHits);
 #endif
 
-    
-//     switch (state)
-//     {
-//     case TapeFollow:
-//         leftMotor.start();
-//         rightMotor.start();
-//         modulateMotors(tapePID.pid(tapeError()));
+    switch (state)
+    {
+    case TapeFollow:
+        leftMotor.start();
+        rightMotor.start();
+        modulateMotors(tapePID.pid(tapeError()));
 
-//         if (idolCount < 2)
-//         {
-//             if (rdistanceTravelled >= 160 && (rightEncoder.getDistance() - lastPickupDistance) > 70)
-//             {
-//                 rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
-//                 leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
-//                 tapePID.setKP(13);
-//                 tapePID.setKD(4);
-//                 int distance = rightClaw.getDistance();
-// #if DEBUG
-//                 display_handler.println(distance);
-// #endif
-//                 if (distance > 10 && distance < 28)
-//                 {
-//                     sonarHits++;
-//                 }
-//                 else
-//                 {
-//                     sonarResiliance--;
-//                     if (sonarResiliance <= 0)
-//                     {
-//                         sonarHits = 0;
-//                     }
-//                 }
-//                 if (sonarHits >= hitsRequired[idolCount])
-//                 {
-//                     rightMotor.activeStop();
-//                     leftMotor.activeStop();
+        if (idolCount < 2)
+        {
+            if (rdistanceTravelled >= 160 && (rightEncoder.getDistance() - lastPickupDistance) > 70)
+            {
+                rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+                leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+                tapePID.setKP(13);
+                tapePID.setKD(4);
+                int distance = rightClaw.getDistance();
+#if DEBUG
+                display_handler.println(distance);
+#endif
+                if (distance > 10 && distance < 28)
+                {
+                    sonarHits++;
+                }
+                else
+                {
+                    sonarResiliance--;
+                    if (sonarResiliance <= 0)
+                    {
+                        sonarHits = 0;
+                    }
+                }
+                if (sonarHits >= hitsRequired[idolCount])
+                {
+                    rightMotor.activeStop();
+                    leftMotor.activeStop();
 
-//                     for (int i = 0; i < doubleCheckHitsRequired[idolCount]; i++)
-//                     {
-//                         int doubleCheckDistance = rightClaw.getDistance();
-//                         if (distance > 10 && distance < 25)
-//                         {
-//                             doubleCheckHits++;
-//                         }
-//                     }
-//                     if (doubleCheckHits >= (doubleCheckHitsRequired[idolCount] - doubleCheckResiliance))
-//                     {
-//                         do
-//                         {
-//                             leftMotor.setSpeed(20);
-//                             leftMotor.start();
-//                         } while (rightClaw.getDistance() >= 16);
-//                         leftMotor.activeStop();
-//                         lastPickupDistance = rightEncoder.getDistance();
-//                         rightClaw.pickUp();
-//                         idolCount++;
-//                     }
-//                     rightMotor.setDefaultSpeed(MOTOR_SPEED);
-//                     leftMotor.setDefaultSpeed(MOTOR_SPEED);
-//                     tapePID.setKP(25);
-//                     tapePID.setKD(8);
-//                     rightMotor.start();
-//                     leftMotor.start();
-//                     sonarHits = 0;
-//                     sonarResiliance = 5;
-//                     doubleCheckHits = 0;
-//                     state = FindTape;
-//                 }
-//             }
-//         }
-//         // rightClaw.
-//         break;
+                    for (int i = 0; i < doubleCheckHitsRequired[idolCount]; i++)
+                    {
+                        int doubleCheckDistance = rightClaw.getDistance();
+                        if (distance > 10 && distance < 25)
+                        {
+                            doubleCheckHits++;
+                        }
+                    }
+                    if (doubleCheckHits >= (doubleCheckHitsRequired[idolCount] - doubleCheckResiliance))
+                    {
+                        do
+                        {
+                            leftMotor.setSpeed(20);
+                            leftMotor.start();
+                        } while (rightClaw.getDistance() >= 16);
+                        leftMotor.activeStop();
+                        lastPickupDistance = rightEncoder.getDistance();
+                        rightClaw.pickUp();
+                        idolCount++;
+                    }
+                    rightMotor.setDefaultSpeed(MOTOR_SPEED);
+                    leftMotor.setDefaultSpeed(MOTOR_SPEED);
+                    tapePID.setKP(25);
+                    tapePID.setKD(8);
+                    rightMotor.start();
+                    leftMotor.start();
+                    sonarHits = 0;
+                    sonarResiliance = 5;
+                    doubleCheckHits = 0;
+                    state = FindTape;
+                }
+            }
+        }
+        else
+        {
+            rightClaw.armIn();
+            leftClaw.armIn();
+        }
+        break;
 
-//     case ChickenWire:
-// #if DEBUG
-//         display_handler.display();
-// #endif
+    case ChickenWire:
+#if DEBUG
+        display_handler.display();
+#endif
 
-//         while (analogRead(LINE_FOLLOW_LEFT) > EDGE_THRESHOLD || analogRead(LINE_FOLLOW_RIGHT) > EDGE_THRESHOLD)
-//         {
-//             leftMotor.modulateSpeed(0);
-//             rightMotor.modulateSpeed(0);
-//         }
-//         state = FindTape;
-//         break;
+        while (analogRead(LINE_FOLLOW_LEFT) > EDGE_THRESHOLD || analogRead(LINE_FOLLOW_RIGHT) > EDGE_THRESHOLD)
+        {
+            leftMotor.modulateSpeed(0);
+            rightMotor.modulateSpeed(0);
+        }
+        state = FindTape;
+        break;
 
-//     case FindTape:
+    case FindTape:
 
-//         leftMotor.stop();
-//         rightMotor.stop();
+        leftMotor.stop();
+        rightMotor.stop();
 
-// #if DEBUG
-//         display_handler.display();
-// #endif
-//         delay(500);
+#if DEBUG
+        display_handler.display();
+#endif
+        delay(500);
 
-//         for (int i = 0; i < 3; i++)
-//         {
-//             for (int j = 0; j < 2; j++)
-//             {
-//                 if (!j)
-//                 {
-//                     int startingCount = rightEncoder.getCount();
-//                     rightMotor.setSpeed(30);
-//                     leftMotor.setSpeed(-30);
-//                     rightMotor.start();
-//                     leftMotor.start();
-//                     do
-//                     {
-//                         int left = analogRead(LINE_FOLLOW_LEFT);
-//                         int right = analogRead(LINE_FOLLOW_RIGHT);
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                if (!j)
+                {
+                    int startingCount = rightEncoder.getCount();
+                    rightMotor.setSpeed(30);
+                    leftMotor.setSpeed(-30);
+                    rightMotor.start();
+                    leftMotor.start();
+                    do
+                    {
+                        int left = analogRead(LINE_FOLLOW_LEFT);
+                        int right = analogRead(LINE_FOLLOW_RIGHT);
 
-//                         if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
-//                         {
-//                             onTape = true;
-//                         }
-//                     } while (!onTape && (rightEncoder.getCount() - startingCount) < 50 * angles[i] /*/ANGLE_PER_COUNT*/);
-//                 }
-//                 else
-//                 {
-//                     int startingCount = leftEncoder.getCount();
-//                     leftMotor.setSpeed(30);
-//                     rightMotor.setSpeed(-30);
-//                     rightMotor.start();
-//                     leftMotor.start();
-//                     do
-//                     {
-//                         int left = analogRead(LINE_FOLLOW_LEFT);
-//                         int right = analogRead(LINE_FOLLOW_RIGHT);
+                        if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
+                        {
+                            onTape = true;
+                        }
+                    } while (!onTape && (rightEncoder.getCount() - startingCount) < 50 * angles[i] /*/ANGLE_PER_COUNT*/);
+                }
+                else
+                {
+                    int startingCount = leftEncoder.getCount();
+                    leftMotor.setSpeed(30);
+                    rightMotor.setSpeed(-30);
+                    rightMotor.start();
+                    leftMotor.start();
+                    do
+                    {
+                        int left = analogRead(LINE_FOLLOW_LEFT);
+                        int right = analogRead(LINE_FOLLOW_RIGHT);
 
-//                         if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
-//                         {
-//                             onTape = true;
-//                         }
-//                     } while (!onTape && (leftEncoder.getCount() - startingCount) < 50 * 2.0 * angles[i] /*/ANGLE_PER_COUNT*/);
-//                 }
-//             }
-//         }
-//         rightMotor.stop();
-//         leftMotor.stop();
-//         rightMotor.setDefaultSpeed(MOTOR_SPEED);
-//         leftMotor.setDefaultSpeed(MOTOR_SPEED);
+                        if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
+                        {
+                            onTape = true;
+                        }
+                    } while (!onTape && (leftEncoder.getCount() - startingCount) < 50 * 2.0 * angles[i] /*/ANGLE_PER_COUNT*/);
+                }
+            }
+        }
+        rightMotor.stop();
+        leftMotor.stop();
+        rightMotor.setDefaultSpeed(MOTOR_SPEED);
+        leftMotor.setDefaultSpeed(MOTOR_SPEED);
 
-//         state = TapeFollow;
-//         break;
+        state = TapeFollow;
+        break;
 
-//     case IRFollow:
-// #if DEBUG
-//         display_handler.display();
-// #endif
-//         modulateMotors(irPID.pid(irError()));
-//         break;
+    case PassArch:
+        leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+        rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+        modulateMotors(tapePID.pid(tapeError()));
 
-//     case Bridge:
-// #if DEBUG
-//         display_handler.display();
-// #endif
-//         break;
 
-//     case DropIdols:
-// #if DEBUG
-//         display_handler.display();
-// #endif
-//         break;
 
-//     default:
-//         break;
-//     }
+    break;
+
+    case IRFollow:
+#if DEBUG
+        // display_handler.display();
+#endif
+        modulateMotors(irPID.pid(irError()));
+        break;
+
+    case Bridge:
+#if DEBUG
+        display_handler.display();
+#endif
+        break;
+
+    case DropIdols:
+#if DEBUG
+        display_handler.display();
+#endif
+        break;
+
+    default:
+        break;
+    }
 #if DEBUG
     display_handler.display();
     abcdefgh++;
