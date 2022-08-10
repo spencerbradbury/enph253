@@ -51,6 +51,7 @@ int doubleCheckHitsRequired[4] = {10, 10, 1, 1};
 #else
 int hitsRequired[4] = {20, 15, 15, 1};
 int doubleCheckHitsRequired[4] = {10, 10, 10, 1};
+int pickupAngles[4] = {-10, -10, 0 ,0};
 #endif
 float angles[3] = {10.0, 15.0, 20.0};
 
@@ -155,12 +156,7 @@ void loop()
                     }
                     if (doubleCheckHits >= (doubleCheckHitsRequired[idolCount] - doubleCheckResiliance))
                     {
-                        do
-                        {
-                            leftMotor.setSpeed(20);
-                            leftMotor.start();
-                        } while (rightClaw.getDistance() >= 22);
-                        leftMotor.activeStop();
+                        turn(pickupAngles[idolCount]);
                         lastPickupDistance = rightEncoder.getDistance();
                         rightClaw.pickUp();
                         idolCount++;
@@ -277,32 +273,16 @@ void loop()
         rightMotor.setSpeed(MOTOR_SPEED >> 1);
         referenceDistance = rightEncoder.getDistance();
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 2; i++)
         {
-            do
-            {
-                leftMotor.start();
-                rightMotor.start();
-            } while ((rightEncoder.getDistance() - referenceDistance) < 10);
-
-            leftMotor.activeStop();
-            rightMotor.activeStop();
-
-            referenceCount = rightEncoder.getCount();
-            while ((rightEncoder.getCount() - referenceCount) < 69)
-            {
-                leftMotor.setSpeed(-30);
-                rightMotor.setSpeed(30);
-                leftMotor.start();
-                rightMotor.start();
-            }
-
-            leftMotor.activeStop();
-            rightMotor.activeStop();
+            driveSlowly(10);
+            turn(25);
         }
 
-        leftMotor.setSpeed(MOTOR_SPEED >> 1);
-        rightMotor.setSpeed(MOTOR_SPEED >> 1);
+        leftMotor.setDefaultSpeed(MOTOR_SPEED);
+        rightMotor.setDefaultSpeed(MOTOR_SPEED);
+        leftMotor.setSpeed(MOTOR_SPEED);
+        rightMotor.setSpeed(MOTOR_SPEED);
 
         //         if (irError() != 0)
         // {
