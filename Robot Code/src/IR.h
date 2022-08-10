@@ -4,8 +4,8 @@
 #include <Arduino.h>
 #include <utility>
 
-#define leftEye HIGH
-#define rightEye LOW
+#define leftEye LOW
+#define rightEye HIGH
 
 class IR
 {
