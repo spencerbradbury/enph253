@@ -62,7 +62,7 @@ void Claw::pickUp()
 {
     if (!seeMagnet)
     {
-        moveServo(armServo, armVertical, 7 * armDown / 20);
+        moveServo(armServo, armVertical, armDown / 3);
     }
     if (!seeMagnet)
     {
@@ -75,7 +75,7 @@ void Claw::pickUp()
     }
     if (!seeMagnet)
     {
-        moveServo(armServo, 7* armDown / 20, armDown);
+        moveServo(armServo, armDown / 3, armDown);
     }
     if (!seeMagnet)
     {
@@ -112,4 +112,5 @@ int Claw::getDistance()
 
 void Claw::armIn(){
     armServo.write(armUp);
+    clawServo.write(clawNeutral);
 }
