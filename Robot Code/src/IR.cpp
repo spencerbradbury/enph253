@@ -20,15 +20,15 @@ std::pair<int, int> IR::read()
 
     digitalWrite(clearPin, HIGH);
     digitalWrite(eyeSelectPin, leftEye);
-    delay(10);
+    delay(25);
     digitalWrite(clearPin, LOW);
-    data.first = analogRead(readPin);
+    data.second = analogRead(readPin);
 
     digitalWrite(clearPin, HIGH);
     digitalWrite(eyeSelectPin, rightEye);
-    delay(10);
+    delay(25);
     digitalWrite(clearPin, LOW);
-    data.second = analogRead(readPin);
+    data.first = analogRead(readPin);
 
     return data;
 }
