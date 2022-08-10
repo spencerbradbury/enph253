@@ -9,30 +9,9 @@
 #include "PID.h"
 #include "BetterServo.h"
 #include "pins.h"
-
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET -1    // This display does not have a reset pin accessible
-
-#define REFLECTANCE_THRESHOLD 200
-#define EDGE_THRESHOLD 800
-#define MOTOR_SPEED 65
-
-#define PID_MAX_INT MOTOR_SPEED / 3
-#define LEFT_CLAW_OPEN -10
-#define LEFT_CLAW_CLOSED 70
-#define LEFT_CLAW_NEUTRAL 10
-#define LEFT_ARM_UP 30
-#define LEFT_ARM_DOWN -85
-#define LEFT_ARM_VERTICAL 15
-#define RIGHT_CLAW_OPEN -30
-#define RIGHT_CLAW_CLOSED 55
-#define RIGHT_CLAW_NEUTRAL 5
-#define RIGHT_ARM_UP -70
-#define RIGHT_ARM_DOWN 45
-#define RIGHT_ARM_VERTICAL -45
-
-#define LEDBUILTIN PB2
+#include "constants.h"
+#include "main.h"
+#include "functions.h"
 
 Claw leftClaw(LEFT_ARM, LEFT_CLAW, ULTRASONIC_TRIGGER_LEFT, ULTRASONIC_LEFT, HALL_SENSOR, LEFT_CLAW_OPEN, LEFT_CLAW_CLOSED, LEFT_CLAW_NEUTRAL, LEFT_ARM_UP, LEFT_ARM_DOWN, LEFT_ARM_VERTICAL);
 Claw rightClaw(RIGHT_ARM, RIGHT_CLAW, ULTRASONIC_TRIGGER_RIGHT, ULTRASONIC_RIGHT, HALL_SENSOR, RIGHT_CLAW_OPEN, RIGHT_CLAW_CLOSED, RIGHT_CLAW_NEUTRAL, RIGHT_ARM_UP, RIGHT_ARM_DOWN, RIGHT_ARM_VERTICAL);
@@ -75,16 +54,7 @@ int doubleCheckHitsRequired[4] = {10, 10, 10, 1};
 #endif
 float angles[3] = {10.0, 15.0, 20.0};
 
-enum States
-{
-    TapeFollow,
-    ChickenWire,
-    FindTape,
-    PassArch,
-    IRFollow,
-    Bridge,
-    DropIdols,
-};
+extern States state;
 
 static const char *States_str[] = {
     "TapeFollow",
@@ -96,117 +66,6 @@ static const char *States_str[] = {
     "DropIdols"};
 
 States state;
-
-// Data.first is right, second is left
-int irError()
-{
-    std::pair<int, int> data = IRSensors.read();
-
-    int rawError = data.first - data.second;
-
-#if DEBUG
-    display_handler.printf("right: %d \n", data.first);
-    display_handler.printf("left: %d \n", data.second);
-    display_handler.printf("Error: %d \n", data.first - data.second);
-#endif
-
-    if (rawError > 300)
-    {
-        return (-5);
-    }
-
-    if (rawError > 100)
-    {
-        return (-3);
-    }
-
-    if (rawError > 10)
-    {
-        return (-1);
-    }
-
-    if (rawError < -300)
-    {
-        return (5);
-    }
-
-    if (rawError < -100)
-    {
-        return (3);
-    }
-
-    if (rawError < -10)
-    {
-        return (1);
-    }
-
-    return (0);
-}
-
-int tapeError()
-{
-    int leftValue = analogRead(LINE_FOLLOW_LEFT);
-    int rightValue = analogRead(LINE_FOLLOW_RIGHT);
-
-    bool leftOnTape = (leftValue > REFLECTANCE_THRESHOLD);
-    bool rightOnTape = (rightValue > REFLECTANCE_THRESHOLD);
-
-#if DEBUG
-    display_handler.printf("left: %d, %d\n", leftValue, leftOnTape);
-    display_handler.printf("right: %d, %d\n", rightValue, rightOnTape);
-#endif
-
-    if (leftValue > EDGE_THRESHOLD || rightValue > EDGE_THRESHOLD)
-    {
-        if (idolCount <= 1)
-        {
-            state = ChickenWire;
-        }
-        return (tapePID.getlastErr());
-    }
-
-    if (leftOnTape && !rightOnTape)
-    {
-        return (1);
-    }
-    else if (!leftOnTape && rightOnTape)
-    {
-        return (-1);
-    }
-    else if (!leftOnTape && !rightOnTape)
-    {
-        if (tapePID.getlastErr() > 0)
-        {
-            return (3);
-        }
-        else if (tapePID.getlastErr() < 0)
-        {
-            return (-3);
-        }
-    }
-    else
-    {
-        return (0);
-    }
-}
-
-// Positive Value Turns Left
-void modulateMotors(int value)
-{
-    if (value > 0)
-    {
-        leftMotor.modulateSpeed(-value);
-    }
-    else if (value < 0)
-    {
-        rightMotor.modulateSpeed(value);
-    }
-    else
-    {
-        rightMotor.modulateSpeed(0);
-        leftMotor.modulateSpeed(0);
-    }
-}
 
 void setup()
 {
@@ -513,30 +372,30 @@ void loop()
                     idolCount++;
                 }
             }
-            modulateMotors(irPID.pid(irError()));
-            break;
+        }
+        modulateMotors(irPID.pid(irError()));
+        break;
 #pragma endregion
 
 #pragma region Bridge
-        case Bridge:
+    case Bridge:
 #if DEBUG
-            display_handler.display();
+        display_handler.display();
 #endif
-            break;
+        break;
 #pragma endregion
 
 #pragma region Drop Idols
-        case DropIdols:
+    case DropIdols:
 #if DEBUG
-            display_handler.display();
+        display_handler.display();
 #endif
-            break;
+        break;
 #pragma endregion
 
 #pragma region Default
-        default:
-            break;
+    default:
+        break;
 #pragma endregion
-        }
     }
 }
