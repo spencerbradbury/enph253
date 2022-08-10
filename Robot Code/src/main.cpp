@@ -251,6 +251,7 @@ void loop()
 
     switch (state)
     {
+#pragma region TapeFollow
     case TapeFollow:
         leftMotor.start();
         rightMotor.start();
@@ -319,7 +320,9 @@ void loop()
             }
         }
         break;
+#pragma endregion
 
+#pragma region ChickenWire
     case ChickenWire:
 #if DEBUG
         display_handler.display();
@@ -400,7 +403,9 @@ void loop()
             state = TapeFollow;
         }
         break;
+#pragma endregion
 
+#pragma region PassArch
     case PassArch:
         // #if DEBUG
         //         display_handler.display();
@@ -456,7 +461,9 @@ void loop()
         state = IRFollow;
 
         break;
+#pragma endregion
 
+#pragma region IRFollow
     case IRFollow:
 #if DEBUG
         // display_handler.display();
@@ -508,21 +515,28 @@ void loop()
             }
             modulateMotors(irPID.pid(irError()));
             break;
+#pragma endregion
 
+#pragma region Bridge
         case Bridge:
 #if DEBUG
             display_handler.display();
 #endif
             break;
+#pragma endregion
 
+#pragma region Drop Idols
         case DropIdols:
 #if DEBUG
             display_handler.display();
 #endif
             break;
+#pragma endregion
 
+#pragma region Default
         default:
             break;
+#pragma endregion
         }
     }
 }
