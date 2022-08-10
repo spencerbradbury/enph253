@@ -36,6 +36,8 @@ public:
     int getDistance();
 
     void pickUp();
+
+    void armIn();
 };
 
 #endif // CLAW_H
