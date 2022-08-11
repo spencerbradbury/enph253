@@ -62,46 +62,53 @@ Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t u
 
 void Claw::pickUp()
 {
-    if (!seenBombYet){
-    if (!seeMagnet)
+    if (!seenBombYet)
     {
-        moveServo(armServo, armVertical, armDown / 3);
+        if (!seeMagnet)
+        {
+            moveServo(armServo, armVertical, armVertical + 65);
+        }
+        if (!seeMagnet)
+        {
+            clawServo.write(clawOpen);
+            delay(400);
+            clawServo.write(clawClosed);
+            delay(300);
+            clawServo.write(clawOpen);
+            delay(300);
+        }
+        if (!seeMagnet)
+        {
+            moveServo(armServo, armVertical + 65, armDown);
+        }
+        if (!seeMagnet)
+        {
+            clawServo.write(clawClosed);
+            delay(400);
+        }
+        // moveServo(armServo, armDown, armUp);
+        armServo.write(armVertical);
+        delay(400);
+        clawServo.write(clawNeutral);
     }
-    if (!seeMagnet)
+    else
     {
         clawServo.write(clawOpen);
-        delay(400);
+        delay(300);
+        moveServo(armServo, armVertical, armDown);
         clawServo.write(clawClosed);
+        delay(300);
+        armServo.write(armUp);
         delay(300);
         clawServo.write(clawOpen);
         delay(300);
-    }
-    if (!seeMagnet)
-    {
-        moveServo(armServo, armDown / 3, armDown);
-    }
-    if (!seeMagnet)
-    {
-        clawServo.write(clawClosed);
-        delay(400);
-    }
-    // moveServo(armServo, armDown, armUp);
-    armServo.write(armVertical);
-    delay(400);
-    clawServo.write(clawNeutral);}
-    else{
-        moveServo(armServo, armVertical, armDown / 3);
-        clawServo.write(clawOpen);
-        moveServo(armServo, armDown / 3, armDown);
-        clawServo.write(clawClosed);
-        moveServo(armServo, armDown, armUp);
-        clawServo.write(clawOpen);
         moveServo(armServo, armUp, armVertical);
         clawServo.write(clawNeutral);
     }
     // delay(400);
     // moveServo(armServo, armUp, armVertical);
-    if (seeMagnet){
+    if (seeMagnet)
+    {
         seenBombYet = true;
     }
     this->seeMagnet = false;
@@ -126,7 +133,8 @@ int Claw::getDistance()
     return ((duration / 2) / 29.1);
 }
 
-void Claw::armIn(){
+void Claw::armIn()
+{
     armServo.write(armUp);
     clawServo.write(clawNeutral);
 }

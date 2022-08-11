@@ -53,3 +53,7 @@ void Motor::start(){
         pwm_start(backwardPin, MOTOR_CLOCK_FREQ, map(-this->speed, 0, 100, 0, 1023), RESOLUTION_10B_COMPARE_FORMAT);
     }
 }
+
+int Motor::getDefaultSpeed(){
+    return (this->defaultSpeed);
+}

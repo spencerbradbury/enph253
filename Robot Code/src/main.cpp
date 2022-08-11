@@ -21,7 +21,7 @@ Motor rightMotor(MOTOR_RIGHT_F, MOTOR_RIGHT_B, MOTOR_SPEED);
 Encoder leftEncoder(LEFT_ENCODER_1, LEFT_ENCODER_2);
 Encoder rightEncoder(RIGHT_ENCODER_1, RIGHT_ENCODER_2);
 IR IRSensors(IR_READ, IR_SELECT, IR_RESET);
-PID irPID(10, 3, 1, PID_MAX_INT);
+PID irPID(13, 3, 1, PID_MAX_INT);
 PID tapePID(25, 10, 0, PID_MAX_INT);
 
 #if DEBUG
@@ -55,15 +55,15 @@ int doubleCheckHitsRequired[4] = {10, 10, 1, 1};
 // int hitsRequired[4] = {5, 5, 5, 1};
 int hitsRequired[4] = {15, 15, 15, 1};
 int doubleCheckHitsRequired[4] = {10, 10, 10, 1};
+#endif
 
 #if SIDE
-int pickupAngles[4] = {-8, -8, -5, 0};
+int pickupAngles[4] = {0, 7, 0, 0};
 #else
-int pickupAngles[4] = {-7, -7, 0, 0};
+int pickupAngles[4] = {6, 5, 0, 0};
 #endif
 
-#endif
-float angles[3] = {10.0, 15.0, 20.0};
+float angles[3] = {12.0, 15.0, 20.0};
 
 extern States state;
 
@@ -114,10 +114,12 @@ void loop()
     display_handler.setCursor(0, 0);
     display_handler.println(abcdefgh);
     int duration;
-    // display_handler.printf("State: %s\n", States_str[state]);
+    display_handler.printf("State: %s\n", States_str[state]);
+    display_handler.printf("L Speed: %d\n", leftMotor.getDefaultSpeed());
+    display_handler.printf("R Speed: %d\n", rightMotor.getDefaultSpeed());
     // display_handler.printf("rdist: %d\n", rdistanceTravelled);
     // display_handler.printf("Hits: %d\n", sonarHits);
-    // display_handler.display();
+    display_handler.display();
     abcdefgh++;
 #endif
     switch (state)
@@ -167,7 +169,9 @@ void loop()
                     }
                     if (doubleCheckHits >= (doubleCheckHitsRequired[idolCount] - doubleCheckResiliance))
                     {
+                        delay(300);
                         turn(pickupAngles[idolCount]);
+                        delay(300);
                         rightClaw.pickUp();
                         lastPickupDistance = rightEncoder.getDistance();
                         idolCount++;
@@ -188,170 +192,180 @@ void loop()
         break;
 #pragma endregion
 
-        #pragma region ChickenWire
-            case ChickenWire:
-        #if DEBUG
-                display_handler.display();
-        #endif
+#pragma region ChickenWire
+    case ChickenWire:
+#if DEBUG
+        display_handler.display();
+#endif
 
-                while (analogRead(LINE_FOLLOW_LEFT) > EDGE_THRESHOLD || analogRead(LINE_FOLLOW_RIGHT) > EDGE_THRESHOLD)
+        while (analogRead(LINE_FOLLOW_LEFT) > EDGE_THRESHOLD || analogRead(LINE_FOLLOW_RIGHT) > EDGE_THRESHOLD)
+        {
+            leftMotor.modulateSpeed(0);
+            rightMotor.modulateSpeed(0);
+        }
+        driveSlowly(10);
+        state = FindTape;
+        break;
+#pragma endregion
+
+#pragma region FindTape
+    case FindTape:
+
+        leftMotor.stop();
+        rightMotor.stop();
+
+#if DEBUG
+        display_handler.display();
+#endif
+        delay(500);
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                if (!j)
                 {
-                    leftMotor.modulateSpeed(0);
-                    rightMotor.modulateSpeed(0);
-                }
-                state = FindTape;
-                break;
-        #pragma endregion
-
-        #pragma region FindTape
-            case FindTape:
-
-                leftMotor.stop();
-                rightMotor.stop();
-
-        #if DEBUG
-                display_handler.display();
-        #endif
-                delay(500);
-
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 2; j++)
+                    startingCount = rightEncoder.getCount();
+                    rightMotor.setSpeed(30);
+                    leftMotor.setSpeed(-30);
+                    rightMotor.start();
+                    leftMotor.start();
+                    do
                     {
-                        if (!j)
+                        int left = analogRead(LINE_FOLLOW_LEFT);
+                        int right = analogRead(LINE_FOLLOW_RIGHT);
+
+                        if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
                         {
-                            startingCount = rightEncoder.getCount();
-                            rightMotor.setSpeed(30);
-                            leftMotor.setSpeed(-30);
-                            rightMotor.start();
-                            leftMotor.start();
-                            do
-                            {
-                                int left = analogRead(LINE_FOLLOW_LEFT);
-                                int right = analogRead(LINE_FOLLOW_RIGHT);
-
-                                if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
-                                {
-                                    onTape = true;
-                                }
-                            } while (!onTape && (rightEncoder.getCount() - startingCount) < 50 * angles[i] /*/ANGLE_PER_COUNT*/);
+                            onTape = true;
                         }
-                        else
-                        {
-                            startingCount = leftEncoder.getCount();
-                            leftMotor.setSpeed(30);
-                            rightMotor.setSpeed(-30);
-                            rightMotor.start();
-                            leftMotor.start();
-                            do
-                            {
-                                int left = analogRead(LINE_FOLLOW_LEFT);
-                                int right = analogRead(LINE_FOLLOW_RIGHT);
-
-                                if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
-                                {
-                                    onTape = true;
-                                }
-                            } while (!onTape && (leftEncoder.getCount() - startingCount) < 50 * 2.0 * angles[i] /*/ANGLE_PER_COUNT*/);
-                        }
-                    }
-                }
-                rightMotor.stop();
-                leftMotor.stop();
-                rightMotor.setDefaultSpeed(MOTOR_SPEED);
-                leftMotor.setDefaultSpeed(MOTOR_SPEED);
-
-                if (idolCount == 2)
-                {
-
-                    state = BackDatAssUp;
+                    } while (!onTape && (rightEncoder.getCount() - startingCount) < 50 * angles[i] /*/ANGLE_PER_COUNT*/);
                 }
                 else
                 {
-                    state = TapeFollow;
-                }
-                break;
-        #pragma endregion
-
-        #pragma region BackDatAssUp
-            case BackDatAssUp:
-                // #if DEBUG
-                //         display_handler.display();
-                // #endif
-                rightClaw.armIn();
-                leftClaw.armIn();
-                leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
-                leftMotor.setSpeed(MOTOR_SPEED >> 1);
-                rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
-                rightMotor.setSpeed(MOTOR_SPEED >> 1);
-                referenceDistance = rightEncoder.getDistance();
-
-                delay(1500);
-                for (int i = 0; i < 20; i++)
-                {
-                    if (i < 5)
+                    startingCount = leftEncoder.getCount();
+                    leftMotor.setSpeed(30);
+                    rightMotor.setSpeed(-30);
+                    rightMotor.start();
+                    leftMotor.start();
+                    do
                     {
-                        turn(-15);
-                    }
-                    else
-                    {
-                        if (turnToTape(-15))
+                        int left = analogRead(LINE_FOLLOW_LEFT);
+                        int right = analogRead(LINE_FOLLOW_RIGHT);
+
+                        if ((left > REFLECTANCE_THRESHOLD && left < EDGE_THRESHOLD) || (right > REFLECTANCE_THRESHOLD && right < EDGE_THRESHOLD))
                         {
-                            break;
-                            i = 21;
+                            onTape = true;
                         }
-                    }
-                    delay(500);
+                    } while (!onTape && (leftEncoder.getCount() - startingCount) < 50 * 2.0 * angles[i] /*/ANGLE_PER_COUNT*/);
                 }
-                delay(1500);
-                driveSlowly(-45);
-                delay(1500);
-                driveSlowly(15);
-                delay(1500);
-                turn(90);
-                leftMotor.setDefaultSpeed(MOTOR_SPEED);
-                rightMotor.setDefaultSpeed(MOTOR_SPEED);
-                leftMotor.setSpeed(MOTOR_SPEED);
-                rightMotor.setSpeed(MOTOR_SPEED);
+            }
+        }
+        rightMotor.stop();
+        leftMotor.stop();
+        rightMotor.setDefaultSpeed(MOTOR_SPEED);
+        leftMotor.setDefaultSpeed(MOTOR_SPEED);
 
-                state = FirstIRIdol;
+        if (idolCount == 2)
+        {
 
-                break;
-        #pragma endregion
+            state = BackDatAssUp;
+        }
+        else
+        {
+            state = TapeFollow;
+        }
+        break;
+#pragma endregion
 
-        #pragma region FirstIRIdol
-            case FirstIRIdol:
-        #if DEBUG
-                // display_handler.display();
-        #endif
-                driveSlowly(-60);
-                leftClaw.start();
+#pragma region BackDatAssUp
+    case BackDatAssUp:
+        // #if DEBUG
+        //         display_handler.display();
+        // #endif
+        rightClaw.armIn();
+        leftClaw.armIn();
+        leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+        leftMotor.setSpeed(MOTOR_SPEED >> 1);
+        rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+        rightMotor.setSpeed(MOTOR_SPEED >> 1);
+        referenceDistance = rightEncoder.getDistance();
 
-                for (int i = 0; i < 20; i++)
+        delay(1500);
+        for (int i = 0; i < 20; i++)
+        {
+            if (i < 5)
+            {
+                turn(-15);
+            }
+            else
+            {
+                if (turnToTape(-15))
                 {
-                    if (i < 3)
-                    {
-                        turn(-15);
-                    }
-                    else
-                    {
-                        if (turnToIR(-15))
-                        {
-                            break;
-                            i = 21;
-                        }
-                    }
-                    delay(500);
+                    break;
+                    i = 21;
                 }
+            }
+            delay(400);
+        }
+        delay(500);
+        turn(10);
+        delay(1500);
+        driveSlowly(-45);
+        delay(1500);
+        driveSlowly(17);
+        delay(1500);
+        turn(80);
+        delay(500);
+        driveSlowly(-60);
+        leftMotor.setDefaultSpeed(MOTOR_SPEED);
+        rightMotor.setDefaultSpeed(MOTOR_SPEED);
+        leftMotor.setSpeed(MOTOR_SPEED);
+        rightMotor.setSpeed(MOTOR_SPEED);
 
-                modulateMotors(irPID.pid(irError()));
+        for (int i = 0; i < 20; i++)
+        {
+            if (i < 5)
+            {
+                turn(-15);
+            }
+            else
+            {
+                if (turnToIR(-15))
+                {
+                    i = 21;
+                }
+            }
+            delay(500);
+        }
+        delay(200);
+        driveSlowly(15);
+        delay(300);
+        referenceDistance = rightEncoder.getDistance();
+        state = FirstIRIdol;
 
-                rightMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
-                leftMotor.setDefaultSpeed(MOTOR_SPEED >> 1);
+        break;
+#pragma endregion
+
+#pragma region FirstIRIdol
+    case FirstIRIdol:
+#if DEBUG
+        // display_handler.display();
+#endif
+        rightClaw.start();
+
+        rightMotor.setDefaultSpeed(2 * MOTOR_SPEED / 3);
+        leftMotor.setDefaultSpeed(2 * MOTOR_SPEED / 3);
+        modulateMotors(irPID.pid(irError()));
+
+        if (rightEncoder.getDistance() - referenceDistance >= 25)
+        {
+            while (true)
+            {
                 distance = rightClaw.getDistance();
-        #if DEBUG
+#if DEBUG
                 display_handler.println(distance);
-        #endif
+#endif
                 if (distance > 10 && distance < 34)
                 {
                     sonarHits++;
@@ -389,113 +403,116 @@ void loop()
                     sonarResiliance = 5;
                     doubleCheckHits = 0;
                     state = Bridge;
+                    break;
                 }
+            }
+        }
 
-                /* OLD CODE BEOFRE WE TRIED IR TRACKING
-                        leftMotor.setSpeed(-30);
-                        rightMotor.setSpeed(-30);
+        /* OLD CODE BEOFRE WE TRIED IR TRACKING
+                leftMotor.setSpeed(-30);
+                rightMotor.setSpeed(-30);
 
-                        do
+                do
+                {
+                    rightMotor.start();
+                    leftMotor.start();
+                    distance = leftClaw.getDistance();
+                    if (distance > 5 && distance < 34)
+                    {
+                        sonarHits++;
+                    }
+                    else
+                    {
+                        sonarResiliance--;
+                        if (sonarResiliance <= 0)
                         {
-                            rightMotor.start();
-                            leftMotor.start();
-                            distance = leftClaw.getDistance();
-                            if (distance > 5 && distance < 34)
+                            sonarHits = 0;
+                        }
+                    }
+                    if (sonarHits >= hitsRequired[idolCount])
+                    {
+                        rightMotor.activeStop();
+                        leftMotor.activeStop();
+
+                        for (int i = 0; i < doubleCheckHitsRequired[idolCount]; i++)
+                        {
+                            int doubleCheckDistance = leftClaw.getDistance();
+                            if (doubleCheckDistance > 5 && doubleCheckDistance < 25)
                             {
-                                sonarHits++;
+                                doubleCheckHits++;
                             }
-                            else
+                        }
+                        if (doubleCheckHits >= (doubleCheckHitsRequired[idolCount] - doubleCheckResiliance))
+                        {
+                            int adjustmentDistance = leftClaw.getDistance();
+                            if (adjustmentDistance > 20)
                             {
-                                sonarResiliance--;
-                                if (sonarResiliance <= 0)
+                                rightMotor.setSpeed(30);
+                                while (leftClaw.getDistance() > 20)
                                 {
-                                    sonarHits = 0;
+                                    rightMotor.start();
                                 }
+                                rightMotor.stop();
                             }
-                            if (sonarHits >= hitsRequired[idolCount])
+                            else if (adjustmentDistance < 15)
                             {
-                                rightMotor.activeStop();
-                                leftMotor.activeStop();
-
-                                for (int i = 0; i < doubleCheckHitsRequired[idolCount]; i++)
+                                turnWide(-40);
+                                driveSlowly(15);
+                                turn(20);
+                                rightMotor.setSpeed(-30);
+                                leftMotor.setSpeed(-30);
+                                do
                                 {
-                                    int doubleCheckDistance = leftClaw.getDistance();
-                                    if (doubleCheckDistance > 5 && doubleCheckDistance < 25)
-                                    {
-                                        doubleCheckHits++;
-                                    }
-                                }
-                                if (doubleCheckHits >= (doubleCheckHitsRequired[idolCount] - doubleCheckResiliance))
-                                {
-                                    int adjustmentDistance = leftClaw.getDistance();
-                                    if (adjustmentDistance > 20)
-                                    {
-                                        rightMotor.setSpeed(30);
-                                        while (leftClaw.getDistance() > 20)
-                                        {
-                                            rightMotor.start();
-                                        }
-                                        rightMotor.stop();
-                                    }
-                                    else if (adjustmentDistance < 15)
-                                    {
-                                        turnWide(-40);
-                                        driveSlowly(15);
-                                        turn(20);
-                                        rightMotor.setSpeed(-30);
-                                        leftMotor.setSpeed(-30);
-                                        do
-                                        {
-                                            distance = leftClaw.getDistance();
-                                            leftMotor.start();
-                                            rightMotor.start();
-                                        } while (distance < 5 || distance > 23);
-                                    }
-                                    leftClaw.pickUp();
-                                    idolCount++;
-                                    sonarHits = 0;
-                                    sonarResiliance = 5;
-                                    doubleCheckHits = 0;
-                                    state = SecondIRIdol;
-                                }
+                                    distance = leftClaw.getDistance();
+                                    leftMotor.start();
+                                    rightMotor.start();
+                                } while (distance < 5 || distance > 23);
                             }
-                        } while (state == FirstIRIdol);*/
+                            leftClaw.pickUp();
+                            idolCount++;
+                            sonarHits = 0;
+                            sonarResiliance = 5;
+                            doubleCheckHits = 0;
+                            state = SecondIRIdol;
+                        }
+                    }
+                } while (state == FirstIRIdol);*/
 
-                break;
-        #pragma endregion
+        break;
+#pragma endregion
 
-        #pragma region SecondIRIdol
-            case SecondIRIdol:
-                leftMotor.stop();
-                rightMotor.stop();
+#pragma region SecondIRIdol
+    case SecondIRIdol:
+        leftMotor.stop();
+        rightMotor.stop();
 
-                break;
-        #pragma endregion
+        break;
+#pragma endregion
 
-        #pragma region Bridge
-            case Bridge:
-        #if DEBUG
-                display_handler.display();
-        #endif
-                leftMotor.stop();
-                rightMotor.stop();
-                leftClaw.armIn();
-                rightClaw.armIn();
-                break;
-        #pragma endregion
+#pragma region Bridge
+    case Bridge:
+#if DEBUG
+        display_handler.display();
+#endif
+        leftMotor.stop();
+        rightMotor.stop();
+        leftClaw.armIn();
+        rightClaw.armIn();
+        break;
+#pragma endregion
 
-        #pragma region Drop Idols
-            case DropIdols:
-        #if DEBUG
-                display_handler.display();
-        #endif
-                break;
-        #pragma endregion
+#pragma region Drop Idols
+    case DropIdols:
+#if DEBUG
+        display_handler.display();
+#endif
+        break;
+#pragma endregion
 
-        #pragma region Default
-            default:
-                break;
-        #pragma endregion
+#pragma region Default
+    default:
+        break;
+#pragma endregion
     }
 
 #if DEBUG

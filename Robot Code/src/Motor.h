@@ -27,5 +27,7 @@ public:
     void activeStop();
 
     void start();
+
+    int getDefaultSpeed();
 };
 #endif // MOTOR_H

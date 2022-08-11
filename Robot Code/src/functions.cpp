@@ -12,6 +12,7 @@ extern IR IRSensors;
 extern int idolCount;
 extern States state;
 extern PID tapePID;
+extern PID irPID;
 extern Motor leftMotor;
 extern Motor rightMotor;
 extern Encoder leftEncoder;
@@ -23,7 +24,6 @@ int irError()
     std::pair<int, int> data = IRSensors.read();
 
     int rawError = data.first - data.second;
-
 
     if (rawError > 300)
     {
@@ -53,6 +53,18 @@ int irError()
     if (rawError < -10)
     {
         return (1);
+    }
+
+    if (data.first == 0 && data.second == 0)
+    {
+        if (irPID.getlastErr() > 0)
+        {
+            return (5);
+        }
+        else if (irPID.getlastErr() < 0)
+        {
+            return (-5);
+        }
     }
 
     return (0);
@@ -294,7 +306,7 @@ bool turnToIR(int angle)
         while ((rightEncoder.getCount() - referenceCount) < angleToCount(angle))
         {
             std::pair<int, int> data = IRSensors.read();
-            if (data.first != 0 || data.second != 0)
+            if (data.first >= 10 && data.second >= 10)
             {
                 rightMotor.stop();
                 leftMotor.stop();
@@ -312,7 +324,7 @@ bool turnToIR(int angle)
         while ((leftEncoder.getCount() - referenceCount) < angleToCount(abs(angle)))
         {
             std::pair<int, int> data = IRSensors.read();
-            if (data.first != 0 || data.second != 0)
+            if (data.first != 0 && data.second != 0)
             {
                 rightMotor.stop();
                 leftMotor.stop();
