@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include "BetterServo.h"
 
+extern bool seenBombYet;
+
 void Claw::seeBomb()
 {
     this->seeMagnet = true;
@@ -60,6 +62,7 @@ Claw::Claw(PinName armPin, PinName clawPin, uint8_t ultrasonicTrigger, uint8_t u
 
 void Claw::pickUp()
 {
+    if (!seenBombYet){
     if (!seeMagnet)
     {
         moveServo(armServo, armVertical, armDown / 3);
@@ -83,11 +86,24 @@ void Claw::pickUp()
         delay(400);
     }
     // moveServo(armServo, armDown, armUp);
-    armServo.write(armUp);
+    armServo.write(armVertical);
     delay(400);
-    clawServo.write(clawNeutral);
-    delay(400);
-    moveServo(armServo, armUp, armVertical);
+    clawServo.write(clawNeutral);}
+    else{
+        moveServo(armServo, armVertical, armDown / 3);
+        clawServo.write(clawOpen);
+        moveServo(armServo, armDown / 3, armDown);
+        clawServo.write(clawClosed);
+        moveServo(armServo, armDown, armUp);
+        clawServo.write(clawOpen);
+        moveServo(armServo, armUp, armVertical);
+        clawServo.write(clawNeutral);
+    }
+    // delay(400);
+    // moveServo(armServo, armUp, armVertical);
+    if (seeMagnet){
+        seenBombYet = true;
+    }
     this->seeMagnet = false;
 }
 
