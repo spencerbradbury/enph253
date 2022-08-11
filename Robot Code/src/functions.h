@@ -9,6 +9,8 @@ void modulateMotors(int value);
 
 void turn(int angle);
 
+void turnWide(int angle);
+
 void driveSlowly(int distance);
 
 #endif // FUNCTIONS_H

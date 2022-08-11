@@ -159,14 +159,49 @@ void turn(int angle)
         int referenceCount = leftEncoder.getCount();
         leftMotor.setSpeed(30);
         rightMotor.setSpeed(-30);
-        while ((leftEncoder.getCount() - referenceCount) < angleToCount(angle))
+        while ((leftEncoder.getCount() - referenceCount) < angleToCount(abs(angle)))
         {
             leftMotor.start();
             rightMotor.start();
         }
     }
-    leftMotor.activeStop();
-    rightMotor.activeStop();
+    leftMotor.stop();
+    rightMotor.stop();
+    leftMotor.setSpeed(MOTOR_SPEED);
+    rightMotor.setSpeed(MOTOR_SPEED);
+}
+
+// Positive = counter clockwise (left), degrees (roughly)
+void turnWide(int angle)
+{
+    leftMotor.stop();
+    rightMotor.stop();
+
+    if (angle == 0)
+    {
+        return;
+    }
+
+    if (angle > 0)
+    {
+        int referenceCount = rightEncoder.getCount();
+        rightMotor.setSpeed(45);
+        while ((rightEncoder.getCount() - referenceCount) < angleToCount(angle))
+        {
+            rightMotor.start();
+        }
+    }
+    else
+    {
+        int referenceCount = leftEncoder.getCount();
+        leftMotor.setSpeed(45);
+        while ((leftEncoder.getCount() - referenceCount) < angleToCount(abs(angle)))
+        {
+            leftMotor.start();
+        }
+    }
+    leftMotor.stop();
+    rightMotor.stop();
     leftMotor.setSpeed(MOTOR_SPEED);
     rightMotor.setSpeed(MOTOR_SPEED);
 }
@@ -188,7 +223,7 @@ void driveSlowly(int distance)
         rightMotor.setSpeed(30);
         int referenceDistance = rightEncoder.getDistance();
 
-        while ((rightEncoder.getDistance() - referenceDistance) > distance)
+        while ((rightEncoder.getDistance() - referenceDistance) < distance)
         {
             leftMotor.start();
             rightMotor.start();
@@ -200,14 +235,14 @@ void driveSlowly(int distance)
         rightMotor.setSpeed(-30);
         int refereenceDistance = rightEncoder.getDistance();
 
-        while ((rightEncoder.getDistance() - refereenceDistance) < distance)
+        while ((rightEncoder.getDistance() - refereenceDistance) > distance)
         {
             leftMotor.start();
             rightMotor.start();
         }
     }
-    leftMotor.activeStop();
-    rightMotor.activeStop();
+    leftMotor.stop();
+    rightMotor.stop();
     leftMotor.setSpeed(MOTOR_SPEED);
     rightMotor.setSpeed(MOTOR_SPEED);
 }
