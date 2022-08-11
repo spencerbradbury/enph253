@@ -7,7 +7,8 @@ enum States
     ChickenWire,
     FindTape,
     PassArch,
-    IRFollow,
+    FirstIRIdol,
+    SecondIRIdol,
     Bridge,
     DropIdols,
 };
