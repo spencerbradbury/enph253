@@ -9,6 +9,12 @@ void modulateMotors(int value);
 
 void turn(int angle);
 
+void correctedTurn(int angle);
+
+bool turnToTape(int angle);
+
+bool turnToIR(int angle);
+
 void turnWide(int angle);
 
 void driveSlowly(int distance);

@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <utility>
 #include "IR.h"
 #include "pins.h"
 #include "constants.h"
@@ -23,11 +24,6 @@ int irError()
 
     int rawError = data.first - data.second;
 
-#if DEBUG
-    display_handler.printf("right: %d \n", data.first);
-    display_handler.printf("left: %d \n", data.second);
-    display_handler.printf("Error: %d \n", data.first - data.second);
-#endif
 
     if (rawError > 300)
     {
@@ -169,6 +165,168 @@ void turn(int angle)
     rightMotor.stop();
     leftMotor.setSpeed(MOTOR_SPEED);
     rightMotor.setSpeed(MOTOR_SPEED);
+}
+
+void correctedTurn(int angle)
+{
+    leftMotor.stop();
+    rightMotor.stop();
+
+    if (angle == 0)
+    {
+        return;
+    }
+
+    if (angle > 0)
+    {
+        int referenceCount = rightEncoder.getCount();
+        rightMotor.setSpeed(30);
+        leftMotor.setSpeed(-30);
+        while ((rightEncoder.getCount() - referenceCount) < angleToCount(angle))
+        {
+            leftMotor.start();
+            rightMotor.start();
+        }
+        leftMotor.stop();
+        rightMotor.stop();
+
+        rightMotor.setSpeed(-20);
+        leftMotor.setSpeed(20);
+        while ((rightEncoder.getCount() - referenceCount) > angleToCount(angle))
+        {
+            leftMotor.start();
+            rightMotor.start();
+        }
+    }
+    else
+    {
+        int referenceCount = leftEncoder.getCount();
+        leftMotor.setSpeed(30);
+        rightMotor.setSpeed(-30);
+        while ((leftEncoder.getCount() - referenceCount) < angleToCount(abs(angle)))
+        {
+            leftMotor.start();
+            rightMotor.start();
+        }
+        leftMotor.stop();
+        rightMotor.stop();
+
+        rightMotor.setSpeed(20);
+        leftMotor.setSpeed(-20);
+        while ((leftEncoder.getCount() - referenceCount) > angleToCount(angle))
+        {
+            leftMotor.start();
+            rightMotor.start();
+        }
+    }
+    leftMotor.stop();
+    rightMotor.stop();
+    leftMotor.setSpeed(MOTOR_SPEED);
+    rightMotor.setSpeed(MOTOR_SPEED);
+}
+
+bool turnToTape(int angle)
+{
+    leftMotor.stop();
+    rightMotor.stop();
+
+    if (angle == 0)
+    {
+        return false;
+    }
+
+    if (angle > 0)
+    {
+        int referenceCount = rightEncoder.getCount();
+        rightMotor.setSpeed(30);
+        leftMotor.setSpeed(-30);
+        while ((rightEncoder.getCount() - referenceCount) < angleToCount(angle))
+        {
+            if ((analogRead(LINE_FOLLOW_LEFT) > REFLECTANCE_THRESHOLD) || (analogRead(LINE_FOLLOW_RIGHT) > REFLECTANCE_THRESHOLD))
+            {
+                rightMotor.stop();
+                leftMotor.stop();
+                return true;
+            }
+            leftMotor.start();
+            rightMotor.start();
+        }
+    }
+    else
+    {
+        int referenceCount = leftEncoder.getCount();
+        leftMotor.setSpeed(30);
+        rightMotor.setSpeed(-30);
+        while ((leftEncoder.getCount() - referenceCount) < angleToCount(abs(angle)))
+        {
+            if ((analogRead(LINE_FOLLOW_LEFT) > REFLECTANCE_THRESHOLD) || (analogRead(LINE_FOLLOW_RIGHT) > REFLECTANCE_THRESHOLD))
+            {
+                rightMotor.stop();
+                leftMotor.stop();
+                return true;
+            }
+            leftMotor.start();
+            rightMotor.start();
+        }
+    }
+    leftMotor.stop();
+    rightMotor.stop();
+    leftMotor.setSpeed(MOTOR_SPEED);
+    rightMotor.setSpeed(MOTOR_SPEED);
+    return false;
+}
+
+bool turnToIR(int angle)
+{
+    leftMotor.stop();
+    rightMotor.stop();
+
+    if (angle == 0)
+    {
+        return false;
+    }
+
+    if (angle > 0)
+    {
+        int referenceCount = rightEncoder.getCount();
+        rightMotor.setSpeed(30);
+        leftMotor.setSpeed(-30);
+        while ((rightEncoder.getCount() - referenceCount) < angleToCount(angle))
+        {
+            std::pair<int, int> data = IRSensors.read();
+            if (data.first != 0 || data.second != 0)
+            {
+                rightMotor.stop();
+                leftMotor.stop();
+                return true;
+            }
+            leftMotor.start();
+            rightMotor.start();
+        }
+    }
+    else
+    {
+        int referenceCount = leftEncoder.getCount();
+        leftMotor.setSpeed(30);
+        rightMotor.setSpeed(-30);
+        while ((leftEncoder.getCount() - referenceCount) < angleToCount(abs(angle)))
+        {
+            std::pair<int, int> data = IRSensors.read();
+            if (data.first != 0 || data.second != 0)
+            {
+                rightMotor.stop();
+                leftMotor.stop();
+                return true;
+            }
+            leftMotor.start();
+            rightMotor.start();
+        }
+    }
+    leftMotor.stop();
+    rightMotor.stop();
+    leftMotor.setSpeed(MOTOR_SPEED);
+    rightMotor.setSpeed(MOTOR_SPEED);
+    return false;
 }
 
 // Positive = counter clockwise (left), degrees (roughly)
