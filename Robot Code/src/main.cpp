@@ -1,3 +1,11 @@
+/*-------------------------
+* Author: Spencer Bradbury
+* https://github.com/spencerbradbury/enph253
+*
+* Help from Tyler Wilson for servo code
+*
+*/
+
 #define DEBUG 0
 #define SIDE 1 // 1 is LEFT from audience view
 
